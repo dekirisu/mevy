@@ -4,12 +4,12 @@
 </p>
 
 ## Code Replacement Macro
-Using the `code!{}` macro will replace hex color codes with a bevy `Color`
+Using the `code!{}` macro will simplify constructing:
 - `Color` by writing `#rgb`/`#rgba`/`#rrggbb`/`#rrggbbaa`
 - `Val` by writing `0px`/`0%`/`0vw`/`0vh`/`0vmin`/`0vmax`/`@`(auto)
-- `UiRect` by writing `[>0px]`/`[>0px 0px]`/`[>0px 0px 0px]`/`[>0px 0px 0px 0px]`
+- `UiRect` by writing `[>0px]`/`[>0px 0px]`/`[>0px 0px 0px]`/`[>0px 0px 0px 0px]` (css-like)
 
-So you can write
+So you can do fun things like:
 ```rust
 let shadow = code!{BoxShadow{
     // use #... is replaced with Color, meaning you can e.g. use methods 
@@ -26,7 +26,6 @@ code!{
     let color3 = #6600AA;
 }
 println!{"{color2:?}"}
-}
 ```
 
 ## More?
