@@ -4,3 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+mevy_core.workspace = true
+
+[workspace.dependencies.mevy_core]
+path = "crates/core"
+version = "0.1.0"
+
+[workspace.dependencies]
+deki = "0.2.4"
+
+[workspace]
+members = ["crates/*","crates/core/syntax"]
+
+[dev-dependencies.bevy]
+version = "0.15"
+default-features = false
+features = ["bevy_ui"]

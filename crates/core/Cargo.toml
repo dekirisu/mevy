@@ -1,0 +1,14 @@
+[package]
+name = "mevy_core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+mevy_core_syntax.path = "syntax"
+
+[dependencies.deki]
+workspace = true
+features = ["proc"]
