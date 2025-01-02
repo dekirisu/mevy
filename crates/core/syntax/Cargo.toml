@@ -3,6 +3,12 @@ name = "mevy_core_syntax"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["Dekirisu <dekirisu@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "token handling for mevy_core!"
+repository = "https://github.com/dekirisu/mevy/"
+keywords = ["proc","bevy"]
+
 [dependencies.deki]
 workspace = true
 features = ["proc"]
