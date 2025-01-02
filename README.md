@@ -1,6 +1,8 @@
-<h1 align="center">Macro Lab for Bevy</h1>
+<h1 align="center">My Macros for Bevy</h1>
 <p align="center">
-    <a href="https://github.com/dekirisu/mevy" style="position:relative"><img src="https://img.shields.io/badge/github-dekirisu/mevy-ee6677"></a><a href="https://crates.io/crates/mevy" style="position:relative"><img src="https://img.shields.io/crates/v/mevy"></a>
+    <a href="https://github.com/dekirisu/mevy" style="position:relative"><img src="https://img.shields.io/badge/github-dekirisu/mevy-ee6677"></a>
+    <a href="https://crates.io/crates/mevy" style="position:relative"><img src="https://img.shields.io/crates/v/mevy"></a>
+    <a href="https://discord.gg/kevWvBuPFg" style="position:relative"><img src="https://img.shields.io/discord/515100001903312898"></a>
 </p>
 
 $${\color{lightblue}basically:\space\color{orange}'bevy,\space but\space write\space things\space differently'}$$
@@ -13,7 +15,9 @@ A **growing** set of $${\color{orange}m \color{lightblue}acros}$$ which add some
 > This crate is meant to provide macros only - no additional bevy plugins, resources, components or systems
 
 ## CSS-like notation for bevy_ui
-Using `ui!((..))` (inner round braces) will return a tuple of **mentioned components** only. See [this example](examples/ui_bundle.rs).
+Using `ui!((..))` (inner round braces) will return a tuple of **mentioned components** only.
+- read about **available fields**, custom fields & notation in [this readme](crates/ui/README.md)
+- see [this example](examples/ui_bundle.rs).
 ```rust
 c.spawn(ui!((
     size:          100px 100px;
@@ -29,22 +33,6 @@ c.spawn(ui!((
 fn neat_outline() -> Outline {ui!((
     outline: 3px 1px #00ff00;
 ))}
-```
-
-**Edge selection acts CSS-like:**
-```rust
-    border: 5px; // 5px to all edges
-    border: 5px 2px; // 5px vertical, 2px horizontal
-    border: 5px 2px 8px; // 5px top, 2px horizontal, 8px bottom
-    border: 5px 2px 4px 1px // (clockwise) top right bottom left
-```
-
-**Corner selection, too:**
-```rust
-    border-radius: 5px; // 5px to all corners
-    border-radius: 5px 0px; // 5px top-left/right, 0px bottom-left/right
-    border-radius: 5px 2px 8px; // 5px top-left, 2px top-right, 8px bottom
-    border-radius: 5px 2px 4px 1px // (clockwise) top-left top-right bottom-right bottom-left
 ```
 
 ## Code Replacement Macro
