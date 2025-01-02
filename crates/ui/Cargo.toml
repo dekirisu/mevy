@@ -1,5 +1,5 @@
 [package]
-name = "mevy_core"
+name = "mevy_ui"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-mevy_core_syntax.workspace = true
+mevy_ui_syntax.workspace = true
 
 [dependencies.deki]
 workspace = true
