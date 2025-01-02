@@ -3,6 +3,13 @@ name = "mevy"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["Dekirisu <dekirisu@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "A growing set of macros, which add witchcraft into bevy!"
+repository = "https://github.com/dekirisu/mevy/"
+keywords = ["macro","bevy"]
+
+
 [dependencies]
 mevy_core.workspace = true
 mevy_ui.workspace = true
