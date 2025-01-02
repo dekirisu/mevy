@@ -3,6 +3,12 @@ name = "mevy_core"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["Dekirisu <dekirisu@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "core bevy macros for mevy!"
+repository = "https://github.com/dekirisu/mevy/"
+keywords = ["macro","bevy"]
+
 [lib]
 proc-macro = true
 
