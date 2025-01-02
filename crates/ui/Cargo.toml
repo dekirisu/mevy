@@ -3,6 +3,12 @@ name = "mevy_ui"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["Dekirisu <dekirisu@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "bevy_ui macro, that adds a CSS-like syntax!"
+repository = "https://github.com/dekirisu/mevy/"
+keywords = ["macro","bevy","bevy_ui"]
+
 [lib]
 proc-macro = true
 
