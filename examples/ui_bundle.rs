@@ -22,14 +22,18 @@ fn startup(mut cmd:Commands){
 
 // Bundles \\
 
-    fn neat_box() -> impl Bundle {ui!((
+    ui!{neat_box(
         size:          100px 100px;
         border:        5px #ff0000;
         box_shadow:    10% 10% 3px 8px #ffaa44;
         background:    #ffffff;
         border_radius: 6px;
         neat_outline;
-    )?)}
+    )?}
+
+    ui!{neat_outline(
+        outline: 3px 1px #00ff00;
+    )}
 
     fn same_neat_box() -> impl Bundle {code!{{(
         Node{
@@ -50,9 +54,5 @@ fn startup(mut cmd:Commands){
         BorderRadius::all(6px),
         neat_outline()
     )}}}
-
-    fn neat_outline() -> Outline {ui!((
-        outline: 3px 1px #00ff00;
-    ))}
 
 // EOF \\
