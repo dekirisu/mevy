@@ -29,6 +29,13 @@ fn neat_outline() -> Outline {ui!((
     outline: 3px 1px #00ff00;
 ))}
 ```
+The order of the components are based on 'first mention' and consistent:
+```rust
+let (shadow,node) = ui!((
+    box_shadow: 10% 10% 3px 8px #ffaa44;
+    size: 100px 100px;
+));
+```
 
 ### Neat Notation
 Inside the macro there you can write those things:
@@ -39,6 +46,7 @@ Inside the macro there you can write those things:
 - `0vmin` = `Val::VMin(0.)`
 - `0vmax` = `Val::VMax(0.)`
 - `#ff0000` = `Color::Srgba(Srgba::hex("#ff0000").unwrap())`
+    - checked by the compiler (and LSP), throwing a custom error if not valid!
 - `red`|`RED` = `bevy::color::palettes::css::RED`
 
 ### Custom Fields
