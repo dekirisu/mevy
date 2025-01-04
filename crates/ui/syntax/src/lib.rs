@@ -99,12 +99,12 @@ use syn::LitFloat;
 
             "background"|"background_color" => {
                 let color = iter.into_color();
-                out!{BackgroundColor => Color [.0][#color] [None]}
+                out!{BackgroundColor => Color [.0][#color] [iter.try_extra()]}
             }
 
             "border_color" => {
                 let color = iter.into_color();
-                out!{BorderColor => Color [.0][#color] [None]}
+                out!{BorderColor => Color [.0][#color] [iter.try_extra()]}
             }
 
             "border_radius" => {
@@ -124,9 +124,9 @@ use syn::LitFloat;
                     let field = field.with_span(oval.span);
                     out!{Outline => Val [.#field][#val] [oval.extra]}
                 }
-                if let (Some(color),span) = iter.try_into_color(){
+                if let UiToken{main:Some(color),span,extra} = iter.try_into_color(){
                     let field = "color".ident_span(span);
-                    out!{Outline => Color [.#field][#color] [None]}
+                    out!{Outline => Color [.#field][#color] [extra]}
                 }
             }
 
@@ -137,9 +137,9 @@ use syn::LitFloat;
                     let field = field.with_span(oval.span);
                     out!{BoxShadow => Val [.#field][#val] [oval.extra]}
                 }
-                if let (Some(color),span) = iter.try_into_color(){
+                if let UiToken{main:Some(color),span,extra} = iter.try_into_color(){
                     let field = "color".ident_span(span);
-                    out!{BoxShadow => Color [.#field][#color] [None]}
+                    out!{BoxShadow => Color [.#field][#color] [extra]}
                 }
             }
 
@@ -283,8 +283,8 @@ use syn::LitFloat;
                     let field2 = field2.with_span(oval.span);
                     out!{Node => Val [.#field.#field2] [#val] [oval.extra]}
                 }
-                if let (Some(color),_) = iter.try_into_color(){
-                    out!{BorderColor => Color [.0][#color] [None]}
+                if let UiToken{main:Some(color),span:_,extra} = iter.try_into_color(){
+                    out!{BorderColor => Color [.0][#color] [extra]}
                 }
             }
 
@@ -535,28 +535,22 @@ use syn::LitFloat;
                 qts!{spon.span()=>RepeatedGridTrack #t}
             })
         }
-        fn try_into_hex_color(&mut self) -> Option<TokenStream> {
-            exit!{if !self.peek().is_punct('#')}
-            self.next();
-            let code = self.next().unwrap();
-            let hex = format!("#{}",code);
-            Some(qt!{#hex}.with_span(code.span()))
-        }
 
         fn into_color(&mut self) -> TokenStream {
-            self.try_into_color().0.unwrap()
+            self.try_into_color().main.unwrap()
         }
 
-        fn try_into_color(&mut self) -> (Option<TokenStream>,Span) {
-            if let Some(hex) = self.try_into_hex_color() {
-                let hex = qts! {hex.span()=>hex(#hex)};
-                (Some(qt!{Color::Srgba(Srgba::#hex.unwrap())}),hex.span())
+        fn try_into_color(&mut self) -> UiToken {  
+            if self.peek_punct() == '#' {
+                self.next();
+                kill!{(stream,span) = self.next_hex_color()}
+                UiToken::new(Some(stream),span,self.try_extra())
             } 
             else if let Some(css) = self.next() {
                 let css = css.risk_ident().to_case(Case::UpperSnake);
-                (Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span())
+                UiToken::new(Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span(),self.try_extra())
             }
-            else {(None,Span::call_site())}
+            else {UiToken::new(None,Span::call_site(),None)}
         }
 
     }

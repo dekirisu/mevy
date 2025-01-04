@@ -63,11 +63,8 @@ use syn::LitFloat;
         } 
 
         if next.is_punct('#') {
-            if let Some(stream) = iter.seek_hex_color() {
-                return Step::Shift(stream);
-            } 
-            else {
-                return Step::Shift(qt!{default()}.with_span(next.span()))
+            if let Some(out) = iter.next_hex_color() {
+                return Step::Shift(out.0);
             }
         }
 
@@ -86,13 +83,24 @@ use syn::LitFloat;
             Some(qt!{Percent(#num)})
         }
 
-        fn seek_hex_color(&mut self) -> Option<TokenStream> {
+        /// get hex color by next token, custom error or none if no token is available
+        fn next_hex_color(&mut self) -> Option<(TokenStream,Span)> {
+            if let Some(out) = self.seek_hex_color() {
+                Some(out)
+            } 
+            else {
+                exit!{hexy = self.next()}
+                Some((qt!{compile_error!{"Invalid hex string!"}}.with_span(hexy.span()),hexy.span()))
+            }
+        }
+
+        fn seek_hex_color(&mut self) -> Option<(TokenStream,Span)> {
             exit!{hex = self.peek().try_hex_color()}
             let tree = self.next().unwrap();
             let hex = format!("#{hex}");
             let hex = qt!{#hex}.with_span(tree.span());
             let fnc = "hex".ident_span(tree.span());
-            Some(qt!{Color::Srgba(Srgba::#fnc(#hex).unwrap())})
+            Some((qt!{Color::Srgba(Srgba::#fnc(#hex).unwrap())},tree.span()))
         }
 
         /// get a rect by valid upcoming tokens - or a default one
