@@ -68,6 +68,7 @@ use syn::LitFloat;
         pub fields: TokenStream,
         // consider switching to Option<_> //<<
         /// e.g. Val::Px(300.)
+        /// - can be empty, indicating the field shouldn't change
         pub value: TokenStream,
         /// any extra tokens passtru
         pub extra: Option<TokenStream>
@@ -98,13 +99,13 @@ use syn::LitFloat;
 
         match field.to_string().as_str() {
 
-            "background"|"background_color" => if let UiToken{main:Some(color),span:_,extra} = iter.try_into_color(){
-                out!{BackgroundColor => Color [.0][#color] [extra]}
-            }
+            "background"|"background_color" => match iter.try_into_color().prepare() {
+                Some((color,_,extra)) => out!{BackgroundColor => Color [.0][#color] [extra]},
+            _=>()}
 
-            "border_color" => if let UiToken{main:Some(color),span:_,extra} = iter.try_into_color(){
-                out!{BorderColor => Color [.0][#color] [extra]}
-            }
+            "border_color" => match iter.try_into_color().prepare() {
+                Some((color,_,extra)) => out!{BorderColor => Color [.0][#color] [extra]},
+            _=>()}
 
             "border_radius" => {
                 let vals = iter.into_rect_like(true);
@@ -123,7 +124,7 @@ use syn::LitFloat;
                     let field = field.with_span(oval.span);
                     out!{Outline => Val [.#field][#val] [oval.extra]}
                 }
-                if let UiToken{main:Some(color),span,extra} = iter.try_into_color(){
+                if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
                     out!{Outline => Color [.#field][#color] [extra]}
                 }
@@ -136,7 +137,7 @@ use syn::LitFloat;
                     let field = field.with_span(oval.span);
                     out!{BoxShadow => Val [.#field][#val] [oval.extra]}
                 }
-                if let UiToken{main:Some(color),span,extra} = iter.try_into_color(){
+                if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
                     out!{BoxShadow => Color [.#field][#color] [extra]}
                 }
@@ -282,7 +283,7 @@ use syn::LitFloat;
                     let field2 = field2.with_span(oval.span);
                     out!{Node => Val [.#field.#field2] [#val] [oval.extra]}
                 }
-                if let UiToken{main:Some(color),span:_,extra} = iter.try_into_color(){
+                if let Some((color,_,extra)) = iter.try_into_color().prepare() {
                     out!{BorderColor => Color [.0][#color] [extra]}
                 }
             }
@@ -308,6 +309,30 @@ use syn::LitFloat;
         }
         map
     }
+
+
+// Ui Token \\
+
+    #[derive(Constructor,Clone)]
+    pub struct UiToken {
+        main: Option<TokenStream>,
+        span: Span,
+        extra: Option<TokenStream>
+    }
+
+    impl UiToken {
+        /// Val::Auto with dirty [Span]
+        fn val() -> Self {Self::new(Some(qt!{Val::Auto}),Span::call_site(),None)}
+    
+        fn prepare(self) -> Option<(TokenStream,Span,Option<TokenStream>)> {
+            match (self.main.yay(),self.extra.yay()) {
+                (true,_) => Some((self.main.unwrap(),self.span,self.extra)),
+                (_,true) => Some((self.main.unwrap_or(qt!{}),self.span,self.extra)),
+                _ => None
+            }
+        }
+    }
+
 
 
 // Token Handling \\
@@ -340,18 +365,6 @@ use syn::LitFloat;
             tok.is_valid_keep(typ)
         }
 
-    }
-
-    #[derive(Constructor,Clone)]
-    pub struct UiToken {
-        main: Option<TokenStream>,
-        span: Span,
-        extra: Option<TokenStream>
-    }
-
-    impl UiToken {
-        /// Val::Auto with dirty [Span]
-        fn val() -> Self {Self::new(Some(qt!{Val::Auto}),Span::call_site(),None)}
     }
 
     #[ext(pub trait DTreeIterExt)]
