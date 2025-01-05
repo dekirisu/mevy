@@ -66,6 +66,7 @@ use syn::LitFloat;
         pub typ: Str,
         /// e.g: .width
         pub fields: TokenStream,
+        // consider switching to Option<_> //<<
         /// e.g. Val::Px(300.)
         pub value: TokenStream,
         /// any extra tokens passtru
@@ -97,14 +98,12 @@ use syn::LitFloat;
 
         match field.to_string().as_str() {
 
-            "background"|"background_color" => {
-                let color = iter.into_color();
-                out!{BackgroundColor => Color [.0][#color] [iter.try_extra()]}
+            "background"|"background_color" => if let UiToken{main:Some(color),span:_,extra} = iter.try_into_color(){
+                out!{BackgroundColor => Color [.0][#color] [extra]}
             }
 
-            "border_color" => {
-                let color = iter.into_color();
-                out!{BorderColor => Color [.0][#color] [iter.try_extra()]}
+            "border_color" => if let UiToken{main:Some(color),span:_,extra} = iter.try_into_color(){
+                out!{BorderColor => Color [.0][#color] [extra]}
             }
 
             "border_radius" => {
@@ -315,18 +314,32 @@ use syn::LitFloat;
 
     #[ext(trait DTreeExt)]
     impl TokenTree {
+
         fn is_keep(&self) -> bool {
             exit!{*TokenTree::Ident(id)=self}
             id.to_string().as_str() == "_"
         }
+
+        fn is_valid_keep(&self,typ:Str) -> bool {
+            exit!{*TokenTree::Ident(id)=self}
+            ["_",typ].contains(&id.to_string().as_str())
+        }
+
     }
 
     #[ext(trait DOptTreeExt)]
     impl <'a> Option<&'a TokenTree> {
+
         fn is_keep(&self) -> bool {
             exit!{tok = self}
             tok.is_keep()
         }
+
+        fn is_valid_keep(&self,typ:Str) -> bool {
+            exit!{tok = self}
+            tok.is_valid_keep(typ)
+        }
+
     }
 
     #[derive(Constructor,Clone)]
@@ -369,7 +382,7 @@ use syn::LitFloat;
         /// # Alternative
         /// use [Self::into_val] if you want [None] to be Val::Auto
         fn try_into_val(&mut self) -> Option<UiToken> { 
-            if self.peek().is_keep(){
+            if self.peek().is_valid_keep("v"){
                 return Some(UiToken::new(None,self.next().unwrap().span(),self.try_extra()));
             }
             Some(match self.next_valvar() {
@@ -536,10 +549,6 @@ use syn::LitFloat;
             })
         }
 
-        fn into_color(&mut self) -> TokenStream {
-            self.try_into_color().main.unwrap()
-        }
-
         fn try_into_color(&mut self) -> UiToken {  
             if self.peek_punct() == '#' {
                 self.next();
@@ -547,8 +556,12 @@ use syn::LitFloat;
                 UiToken::new(Some(stream),span,self.try_extra())
             } 
             else if let Some(css) = self.next() {
-                let css = css.risk_ident().to_case(Case::UpperSnake);
-                UiToken::new(Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span(),self.try_extra())
+                if css.is_valid_keep("c"){
+                    UiToken::new(None,css.span(),self.try_extra())
+                } else {
+                    let css = css.risk_ident().to_case(Case::UpperSnake);
+                    UiToken::new(Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span(),self.try_extra())
+                }
             }
             else {UiToken::new(None,Span::call_site(),None)}
         }
