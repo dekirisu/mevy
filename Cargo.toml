@@ -28,7 +28,7 @@ version = "0.1.0"
 
 [workspace.dependencies.mevy_core_syntax]
 path = "crates/core/syntax"
-version = "0.1.1"
+version = "0.2.0"
 
 [workspace.dependencies.mevy_ui]
 path = "crates/ui"
@@ -36,7 +36,7 @@ version = "0.1.1"
 
 [workspace.dependencies.mevy_ui_syntax]
 path = "crates/ui/syntax"
-version = "0.1.2"
+version = "0.2.0"
 
 [workspace.dependencies]
 deki = "0.2.5"
