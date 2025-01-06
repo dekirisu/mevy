@@ -27,9 +27,10 @@ use syn::LitFloat;
 
     fn code_next (iter:&mut PeekIter) -> Step<TokenTree,TokenStream> {
         exit!{next = iter.next()}
-        match next.try_val_variant() {
+        match next.try_val_variant(true) {
             Check::Some(stream) => return Step::Shift(qt!{Val::#stream}),
             Check::Maybe(num) => if let Some(stream) = iter.seek_val_variant(num) {
+                let stream = stream.with_span(next.span());
                 return Step::Shift(qt!{Val::#stream});
             } _ => {}
         }
@@ -104,7 +105,7 @@ use syn::LitFloat;
         }
 
         /// get a rect by valid upcoming tokens - or a default one
-        fn seek_rect_like(&mut self) -> [Step<Literal,[TokenStream;4]>;2] {
+        fn seek_rect_like(&mut self) -> [Step<(Option<Punct>,Literal),[TokenStream;4]>;2] {
             let mut rect = vec![];
             let mut last = Step::None;
             for _ in 0..4 { match self.next_valvar(){
@@ -124,14 +125,17 @@ use syn::LitFloat;
         /// # Returns
         /// - None: not a Val::_: Iterator hasn't progressed
         /// - Base: not a Val::_, but a number lit: Iterator has progressed
-        /// - Shift: a Val::_
-        fn next_valvar(&mut self) -> Step<Literal,TokenStream> {
-            match self.peek().try_val_variant() {
+        /// - Shift: a Val::_/
+        fn next_valvar(&mut self) -> Step<(Option<Punct>,Literal),TokenStream> {
+            let sign = !self.peek().is_punct('-');
+            let punct = if sign {None} else {self.next().map(|t|t.risk_punct())};
+            match self.peek().try_val_variant(sign) {
                 Check::Maybe(m) => {
+                    println!{"-----------> {sign} {m}"}
                     let base = self.next();
                     match self.seek_val_variant(m){
-                        None => Step::Base(base.unwrap().risk_literal()),
-                        Some(v) => Step::Shift(v)
+                        None => Step::Base((punct,base.unwrap().risk_literal())),
+                        Some(v) => Step::Shift(v.with_span(base.span()))
                     }
                 }
                 Check::Some(v) => {self.next();Step::Shift(v)}
@@ -149,9 +153,9 @@ use syn::LitFloat;
 
     #[ext(pub trait UiTokenTree)]
     impl TokenTree {
-        fn try_val_variant(&self) -> Check<TokenStream,f32> {
+        fn try_val_variant(&self,sign:bool) -> Check<TokenStream,f32> {
             exit!{*TokenTree::Literal(lit) = self}
-            lit.try_val_variant()
+            lit.try_val_variant(sign)
         }
         fn try_hex_color(&self) -> Option<String> {
             let mut t = self.to_string();
@@ -171,16 +175,17 @@ use syn::LitFloat;
             exit!{tree = self}
             tree.^0 ^2 
         }
-        #try_val_variant^(&self) -> Check<TokenStream,f32>^()
+        #try_val_variant^(&self,sign:bool) -> Check<TokenStream,f32>^(sign)
         #try_hex_color^(&self) -> Option<String>^()
     }}
 
     #[ext(pub trait UiLiteral)]
     impl Literal {
-        fn try_val_variant(&self) -> Check<TokenStream,f32> {
+        fn try_val_variant(&self,sign:bool) -> Check<TokenStream,f32> {
             exit!{if !self.is_numeric()}
             let lit: LitFloat = self.clone().into();
             kill!{num = lit.base10_parse::<f32>()}
+            let num = if sign {num} else {-num};
             let val = match lit.suffix() {
                 "px" => "Px",
                 "vw" => "Vw",

@@ -77,7 +77,7 @@ use syn::LitFloat;
     type UiMap = StackMap<Str,Vec<UiEntry>>; 
 
     pub fn ui_style_sheet(field:TokenTree,iter:&mut PeekIter) -> UiMap {
-        iter.skip_puncts("#");
+        iter.skip_puncts("#-");
         let aspan = TokenStream::from_iter(iter.clone()).span();
         let mut map = UiMap::new();
 
@@ -399,7 +399,7 @@ use syn::LitFloat;
                 return Some(UiToken::new(None,self.next().unwrap().span(),self.try_extra()));
             }
             Some(match self.next_valvar() {
-                Step::Base(lit) => {
+                Step::Base((_pct,lit)) => {
                     let var = qts!{lit.span()=>Px(#lit)};
                     UiToken::new(
                         Some(qt!{Val::#var}),
@@ -461,7 +461,7 @@ use syn::LitFloat;
             out
         }
 
-        fn try_into_track_sizing_function(&mut self) -> Step<Literal,TokenStream> {
+        fn try_into_track_sizing_function(&mut self) -> Step<(Option<Punct>,Literal),TokenStream> {
              match self.next_valvar() {
                 Step::None => Step::Shift(match self.next() {
                     Some(TokenTree::Ident(idnt)) => match idnt.to_string().as_str() {
@@ -478,17 +478,17 @@ use syn::LitFloat;
             }
         }
 
-        fn try_into_track_sizing_function_max(&mut self) -> Step<Literal,TokenStream> {
+        fn try_into_track_sizing_function_max(&mut self) -> Step<(Option<Punct>,Literal),TokenStream> {
             match self.try_into_track_sizing_function(){
                 Step::Shift(var) => Step::Shift(var),
-                Step::Base(lit) => match LitFloat::from(lit.clone()).suffix() {
+                Step::Base((pct,lit)) => match LitFloat::from(lit.clone()).suffix() {
                     "fit_px" => Step::Shift(qts!{lit.span()=>FitContentPx(#lit)}),
                     "fit" => match self.peek_punct(){
                         '%' => {self.next();Step::Shift(qts!{lit.span()=>FitContentPercent(#lit)})}
                         '!' => {self.next();Step::Shift(qts!{lit.span()=>FitContentPx(#lit)})}
-                        _ => Step::Base(lit)
+                        _ => Step::Base((pct,lit))
                     }
-                    _ => Step::Base(lit)
+                    _ => Step::Base((pct,lit))
                 }
                 Step::None => Step::None
             }
@@ -514,7 +514,7 @@ use syn::LitFloat;
                     self.next();
                     let mut iter = grp.stream().into_iter().peekable();
                     let min = iter.try_into_track_sizing_function().shift_or(qt!{Auto});
-                    iter.skip_puncts("#");
+                    iter.skip_puncts("#-");
                     let max = iter.try_into_track_sizing_function_max().risk_shift();
                     let min = qts!{min.span()=>MinTrackSizingFunction::#min};
                     let max = qts!{max.span()=>MaxTrackSizingFunction::#max};
@@ -549,7 +549,7 @@ use syn::LitFloat;
                 }
                 _ => panic!()
             };
-            let mut spon = self.skip_puncts("#");
+            let mut spon = self.skip_puncts("#-");
             spon.insert(0,rep);
             let track = if !self.peek().is_ident(){
                 self.try_into_grid_track_base(qt!{#repe,})
