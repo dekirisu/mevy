@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::query, prelude::*};
 use mevy::*;
 
 pub fn main() {
@@ -15,12 +15,22 @@ fn startup(mut cmd:Commands){
         column_gap: 24px;
     )))
     .with_children(|p|{
-        p.spawn(neat_box());
+        p.spawn(neat_box())
+        .observe(|trigger:Trigger<Pointer<Click>>,mut query:Query<(&mut Node,&mut BoxShadow)>|{
+            let (mut node,mut box_shadow) = query.get_mut(trigger.entity()).unwrap();
+            bigger_border_h(&mut node, &mut box_shadow);
+        });
         p.spawn(same_neat_box());
-    });
+    })
+   ;
 }
 
 // Bundles \\
+
+    ui!{bigger_border_h{
+        border: 40px _;
+        box_shadow: _ _ 0px 0px;
+    }}
 
     ui!{neat_box(
         size:          100px 100px;
