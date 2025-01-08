@@ -5,57 +5,75 @@ use syn::LitFloat;
 
 // CSS -> Bundle \\
 
-    pub fn bundle (iter:PeekIter,after:Option<TokenTree>) -> TokenStream {
-        let after = after.map(|a|a.span()).unwrap_or(Span::call_site());
-        let mut bundle = StackMap::<String,()>::new();
-        let mut defaults = StackMap::<String,()>::new();
-        let mut assign = qt!{};
-
-        for stream in iter.split_punct(';') {
-            let mut iter = stream.peek_iter();
-            let field = iter.next().unwrap().risk_ident();
-            let yuim = ui_style_sheet(field.clone().into(),&mut iter);
-
-            if yuim.is_empty() {
-                let varnm = field.to_string().chars()
-                    .map(|c|if c.is_alphanumeric() {c} else {'_'}) 
-                    .collect::<String>().to_case(Case::Snake).ident();
-                let is_class = field.to_string().chars().next().unwrap().is_uppercase();
-                let attr = code(TokenStream::from_iter(iter));
-                let func = match is_class {
-                    true => qt!{#field::new},
-                    false => qt!{#field}
-                };
-                assign.extend(qt!{let #varnm = #func(#attr);});
-                bundle.entry(varnm.to_string());
-                continue
-            }
-
-            for (key,yuis) in yuim.into_iter() {
-                let var = key.to_case(Case::Snake).ident();
-                defaults.entry(key.to_string());
-                bundle.entry(key.to_case(Case::Snake));
-                for UiEntry { typ:_, fields, value, extra:_ } in yuis {
-                    assign.extend(qt!{#var #fields = #value;});
-                }
-            }
-        }
-
-        let defaults = TokenStream::from_iter(defaults.keys.iter().map(|s|{
-            let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
-            qt!{let mut #var = #typ::default();}
-        }));
-        let bundle = bundle.keys.iter().map(|s|s.ident());
-        let out = "bundle".ident_span(after);
-
-        qt!{{
-            #defaults
-            #assign
-            let #out = (#(#bundle),*);
-            bundle
-        }}
+    pub fn bundle(iter:PeekIter,after:Option<TokenTree>) -> TokenStream {
+        UiPrep::from_iter(iter).get_bundle(after)
     }
 
+    #[derive(Default)]
+    pub struct UiPrep {
+        pub types: StackMap<String,()>,
+        pub defaults: StackMap<String,()>,
+        pub assign: TokenStream
+    }
+
+    impl UiPrep {
+        pub fn from_stream(stream:TokenStream) -> Self {
+            Self::from_iter(stream.peek_iter()) 
+        }
+        pub fn from_iter(iter:PeekIter) -> Self {
+            let mut out = Self::default();
+            for stream in iter.split_punct(';') {
+                let mut iter = stream.peek_iter();
+                let field = iter.next().unwrap().risk_ident();
+                let yuim = ui_style_sheet(field.clone().into(),&mut iter);
+
+                if yuim.is_empty() {
+                    let varnm = field.to_string().chars()
+                        .map(|c|if c.is_alphanumeric() {c} else {'_'}) 
+                        .collect::<String>().to_case(Case::Snake).ident();
+                    let is_class = field.to_string().chars().next().unwrap().is_uppercase();
+                    let attr = code(TokenStream::from_iter(iter));
+                    let func = match is_class {
+                        true => qt!{#field::new},
+                        false => qt!{#field}
+                    };
+                    out.assign.extend(qt!{let #varnm = #func(#attr);});
+                    out.types.entry(varnm.to_string());
+                    continue
+                }
+
+                for (key,yuis) in yuim.into_iter() {
+                    let var = key.to_case(Case::Snake).ident();
+                    out.defaults.entry(key.to_string());
+                    out.types.entry(key.to_case(Case::Snake));
+                    for UiEntry { typ:_, fields, value, extra:_ } in yuis {
+                        out.assign.extend(qt!{#var #fields = #value;});
+                    }
+                }
+            }
+            out
+        }
+
+        pub fn get_bundle(&self,after:Option<TokenTree>) -> TokenStream {
+            let after = after.map(|a|a.span()).unwrap_or(Span::call_site());
+
+            let defaults = TokenStream::from_iter(self.defaults.keys.iter().map(|s|{
+                let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
+                qt!{let mut #var = #typ::default();}
+            }));
+            let bundle = self.types.keys.iter().map(|s|s.ident());
+            let out = "bundle".ident_span(after);
+            let assign = self.assign.clone();
+
+            qt!{{
+                #defaults
+                #assign
+                let #out = (#(#bundle),*);
+                bundle
+            }} 
+        }
+
+    }
 
 // CSS-Like \\
 
