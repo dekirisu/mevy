@@ -49,6 +49,9 @@ use syn::LitFloat;
                     for UiEntry { typ:_, fields, value, extra:_ } in yuis {
                         out.assign.extend(qt!{#var #fields = #value;});
                     }
+                    next!{if key == "Node"}
+                    let typ = key.ident_span(field.span());
+                    out.assign.extend(qt!({type O = #typ;}));
                 }
             }
             out
