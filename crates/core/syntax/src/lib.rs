@@ -56,7 +56,6 @@ use syn::LitFloat;
                             #bottom: Val::#b,
                             #left:   Val::#l,
                         }};
-                        //println!{"{tok}"}
                         return Step::Shift(tok);
                     } _ => {}
                 }
@@ -131,7 +130,6 @@ use syn::LitFloat;
             let punct = if sign {None} else {self.next().map(|t|t.risk_punct())};
             match self.peek().try_val_variant(sign) {
                 Check::Maybe(m) => {
-                    println!{"-----------> {sign} {m}"}
                     let base = self.next();
                     match self.seek_val_variant(m){
                         None => Step::Base((punct,base.unwrap().risk_literal())),
