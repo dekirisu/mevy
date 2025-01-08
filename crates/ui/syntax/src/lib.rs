@@ -11,7 +11,8 @@ use syn::LitFloat;
 
     #[derive(Default)]
     pub struct UiPrep {
-        pub types: StackMap<String,()>,
+        /// (variable,is_builtin)
+        pub variables: StackMap<String,bool>,
         pub defaults: StackMap<String,()>,
         pub assign: TokenStream
     }
@@ -38,14 +39,14 @@ use syn::LitFloat;
                         false => qt!{#field}
                     };
                     out.assign.extend(qt!{let #varnm = #func(#attr);});
-                    out.types.entry(varnm.to_string());
+                    *out.variables.entry(varnm.to_string()) = false;
                     continue
                 }
 
                 for (key,yuis) in yuim.into_iter() {
                     let var = key.to_case(Case::Snake).ident();
                     out.defaults.entry(key.to_string());
-                    out.types.entry(key.to_case(Case::Snake));
+                    *out.variables.entry(key.to_case(Case::Snake)) = true;
                     for UiEntry { typ:_, fields, value, extra:_ } in yuis {
                         out.assign.extend(qt!{#var #fields = #value;});
                     }
@@ -64,7 +65,7 @@ use syn::LitFloat;
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 qt!{let mut #var = #typ::default();}
             }));
-            let bundle = self.types.keys.iter().map(|s|s.ident());
+            let bundle = self.variables.keys.iter().map(|s|s.ident());
             let out = "bundle".ident_span(after);
             let assign = self.assign.clone();
 
@@ -74,6 +75,28 @@ use syn::LitFloat;
                 let #out = (#(#bundle),*);
                 bundle
             }} 
+        }
+
+        pub fn get_edits(&self) -> (Vec<(Ident,Ident)>,TokenStream) {
+            let mut expected = vec![];
+            let mut add = qt!();
+            for (var,builtin) in self.variables.iter() {
+                let var = var.ident();
+                if *builtin {
+                    let vart = var.to_case(Case::Pascal);
+                    expected.push((var,vart));
+                } 
+                else {add.extend(qt!(ecmd.insert(#var);));}
+            }
+            if !add.is_empty() {
+                expected.push(("ecmd".ident(),"EntityCommands".ident()));
+            }
+            let assign = self.assign.clone();
+
+            (expected,qt!({
+                #assign
+                #add
+            }))
         }
 
     }

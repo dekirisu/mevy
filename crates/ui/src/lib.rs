@@ -4,10 +4,34 @@ use proc_macro::TokenStream as CompilerTokens;
 
 // Macro \\
 
-    /// One macro to rule them all:
-    /// - `ui!{( width: 1px; )}`: css syntax => tuple of mentioned UI components
-    /// - `ui!{func_name()}`: (quick prefab) css syntax => fn func_name() -> impl Bundle {..} 
-    /// - ..more to come
+    /// Provides CSS-like syntax to either edit or create bevy_ui components.
+    ///
+    /// ## Available fields
+    /// To see a full list of built-in fields, see readme of mevy_ui, here are some examples:
+    /// ```rust 
+    /// cmd.spawn(ui!((
+    ///     size: 50px 50px;
+    ///     background: #ff0000;
+    ///     box_shadow: 0px 0px 5px 5px #ff0000;
+    ///     border: 5px #00ff00;
+    /// )));
+    /// ```
+    ///
+    /// ## Possible Modes
+    /// Depending on the delimiters & if there is a name defined, the function of this macro differs:
+    /// - Inline Tuple Mode | `ui!{( width: 1px; )}`:
+    ///     - returns a tuple of mentioned UI components
+    /// - Function Tuple Mode | `ui!{func_name( width: 1px; )}`: 
+    ///     - defines a function that returns a tuple of mentioned UI components
+    ///     - these can then be used as fields like this: `ui!{( func_name; )}`
+    /// - Function Edit Mode | `ui!{func_name{ width: 2px; }}`
+    ///     - defines a function, that edits mentioned UI components
+    ///     - the parameters of this function = the needed mutable components
+    ///     - using `_` will keep the original values: e.g. `border:  _ #ff0000;`
+    /// 
+    /// ## Custom Fields
+    /// Every function that returns any `Bundle` (even if it is just -> `impl Bundle`) can be used
+    /// as custom field.
     #[proc_macro]
     pub fn ui (tok:CompilerTokens) -> CompilerTokens {
         let tok: TokenStream = tok.into();
@@ -21,6 +45,15 @@ use proc_macro::TokenStream as CompilerTokens;
                         let g = iter.next().unwrap().risk_group();
                         let bundle = bundle(g.stream().peek_iter(),iter.next());
                         qt!{pub fn #ident () -> impl Bundle {#bundle}}
+                    }
+                    TokenTree::Group(g) if g.delimiter().is_brace() => {
+                        let g = iter.next().unwrap().risk_group();
+                        let prep = UiPrep::from_stream(g.stream());
+                        let (expected,edits) = prep.get_edits();
+                        let attr = expected.into_iter()
+                            .map(|(v,t)|qt!(#v: &mut #t))
+                            .collect::<Vec<_>>();
+                        qt!{pub fn #ident (#(#attr),*) {#edits}}
                     }
                     _ => todo!{} 
                 }
