@@ -12,15 +12,18 @@
 
 
 ## ⭐ The Star of the Crate: CSS-like Notation
-Using `ui!((..))` (inner round braces) will return a tuple of **mentioned components** only. See [this example](../../examples/ui_bundle.rs).
+The macro `ui!()` has multiple modes, that are invoked by (1.) the type of delimiters and (2.) if a name is provided:
+
+### Tuple Inline Mode
+`ui!((..))` (inner round braces) will return a tuple of **mentioned components** only. See [this example](../../examples/ui_bundle.rs).
 ```rust
 c.spawn(ui!((
-  size:          100px 100px;
-  border:        5px #ff0000;
-  box_shadow:    10% 10% 3px 8px #ffaa44;
-  background:    #ffffff;
-  border_radius: 6px;
-  neat_outline;
+    size:          100px 100px;
+    border:        5px #ff0000;
+    box_shadow:    10% 10% 3px 8px #ffaa44;
+    background:    #ffffff;
+    border_radius: 6px;
+    neat_outline;
 )?));
 //^ optional ? (or any token): hovering shows the returned tuple (if LSP used)
 
@@ -35,6 +38,46 @@ let (shadow,node) = ui!((
     box_shadow: 10% 10% 3px 8px #ffaa44;
     size: 100px 100px;
 ));
+```
+### Tuple Function Mode
+If a name is defined before the inner braces, a function will be defined returning an `impl Bundle` of its content:
+```rust
+ui!{neat_box(
+    size:       100px 100px;
+    background: #ffffff;
+)}
+
+// is the same as:
+pub fn neat_box() -> impl Bundle {ui!((
+    size:       100px 100px;
+    background: #ffffff;
+))}
+```
+
+### Edit Function  Mode
+Defining a name and then using curly brackets `{}` instead, will define a function that mutates existing components:
+- The parameters of this function are `&mut ..` of the components to be mutated
+- Custom fields will be `insert`ed, an `EntityCommands` will be then added to the parameters
+- Using `_` instead of a calue will keep ste already existing one:
+    - e.g. `box_shadow: _ _ 10px` will only affect the blur radius, since x and y are 'kept' and spread & color not mentioned
+```rust
+ui!{into_red_glow{
+  border: _ #ffffff;
+  background: #ff0000;
+  // no value mentined, so only color affected:
+  box_shadow: #ff0000 
+}}
+
+// does the same as:
+pub fn into_red_glow(
+    border_color: &mut BorderColor,
+    background_color: &mut BackgroundColor,
+    box_shadow: &mut BoxShadow
+){
+    border_color.0 = Srgba::hex("#ffffff").unwrap().into();
+    background_color.0 = Srgba::hex("#ff0000").unwrap().into();
+    box_shadow.color = Srgba::hex("#ff0000").unwrap().into();
+}
 ```
 
 ### Neat Notation
