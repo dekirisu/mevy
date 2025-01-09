@@ -7,14 +7,33 @@
     <a href="https://discord.gg/kevWvBuPFg" style="position:relative"><img src="https://img.shields.io/discord/515100001903312898"></a>
 </p>
 
-$${\color{lightblue}basically:\space\color{orange}'bevy,\space but\space write\space things\space differently'}$$
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/891599e8-98a9-4d32-9f6e-6dfa76e51a31">
+</p
 
-A **growing** set of $${\color{orange}m \color{lightblue}acros}$$ which add some witchcraft into $${\color{lightblue}b \color{orange}evy}$$, currently available: 🪄
+A **growing** set of **m**acros which add some witchcraft into b**evy**, currently available: 🪄
 - **Style Sheet Notation** for `bevy_ui` components (and your own) - `ui!(( width: 20px; ))`
 - **Simplified Notation** for `Color`, `Val` and `UiRect` - `code!{ let red = #ff0000; //..any code }`
 
 > [!IMPORTANT]
 > This crate is meant to provide macros only - no additional bevy plugins, resources, components or systems
+
+## Simpler Hierarchy Spawning
+Spawn children just by stating `[]` - the 'names' are just variables containing their `Entity`
+- those variables can be used anywhere in the macro - even 
+- [read more](crates/ecs/README.md) or see [this example](examples/ecs_simple_spawn.rs).
+
+```rust
+spawn!{
+    // component/bundle;
+    // .method(..);
+    SpecificChild(optional_child_name);
+    [optional_child_name][
+        // component;
+        // .method(..);
+    ]
+}
+```
 
 ## CSS-like notation for bevy_ui
 Using `ui!((..))` (inner round braces) will return a tuple of **mentioned components** only.
