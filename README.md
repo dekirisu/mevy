@@ -20,7 +20,7 @@ A **growing** set of **m**acros which add some witchcraft into b**evy**, current
 
 ## Simpler Hierarchy Spawning
 Spawn children just by stating `[]` - the 'names' are just variables containing their `Entity`
-- those variables can be used anywhere in the macro - even 
+- those variables can be used anywhere in the macro - even 'before'
 - [read more](crates/ecs/README.md) or see [this example](examples/ecs_simple_spawn.rs).
 
 ```rust
