@@ -66,6 +66,23 @@ use deki::*;
                     commands.extend(qt!(ecmd.#(#iter)*;));
                 }
 
+                TokenTree::Punct(p) if p.as_char() == '>' => {
+                    iter.next();
+                    let mut event = iter.collect::<Vec<_>>();
+                    next!{action = event.pop()}
+                    match action {
+                        TokenTree::Group(group) if group.delimiter().is_brace() => {
+                            commands.extend(qt!(
+                                ecmd.observe(|trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                    let mut this = world.entity(trigger.entity());
+                                    #group
+                                });
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+
                 _ => {}
             }
         }
