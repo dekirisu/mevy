@@ -11,7 +11,7 @@ pub fn main() {
 
 fn startup(mut world:Commands){
     spawn!{Camera2d::default()}
-    code!{spawn!{
+    spawn!{
         BackgroundColor(#ff0000);
         BorderColor(#00ffff);
         Node{ width:80px, height:80px, margin:[>16px], ..default()};
@@ -30,7 +30,7 @@ fn startup(mut world:Commands){
             Node{ width:20%, height:20%, ..default() };
             BackgroundColor(#00ffaa);
         ]
-    }}
+    }
 }
 
 fn destroy_on <E:Debug+Clone+Reflect> (entity:Entity) -> impl Fn(Trigger<Pointer<E>>,Commands) {
