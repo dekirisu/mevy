@@ -35,7 +35,12 @@ use syn::LitFloat;
             } _ => {}
         }
 
-        if next.is_punct('@') {
+        if next.is_punct('!') && iter.peek().nay() {
+            let default = "default".ident_span(next.span());
+            return Step::Shift(qt!{..Default::#default()});
+        }
+
+        if next.is_punct('@'){
             let auto = "Auto".ident_span(next.span());
             return Step::Shift(qt!{Val::#auto});
         }
