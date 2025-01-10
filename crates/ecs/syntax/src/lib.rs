@@ -73,7 +73,7 @@ use deki::*;
                     match action {
                         TokenTree::Group(group) if group.delimiter().is_brace() => {
                             commands.extend(qt!(
-                                ecmd.observe(|trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                ecmd.observe(move|trigger:Trigger<#(#event)*>,mut world: Commands|{
                                     let mut this = world.entity(trigger.entity());
                                     #group
                                 });
