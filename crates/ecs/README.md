@@ -9,6 +9,8 @@
 
 This crate is part of [mevy](https://github.com/dekirisu/mevy) (tl;dr: more neat macros) so take a look! 🦆
 
+
+
 ## A simpler way of spawning
 The macro `spawn!{..}` allows you to spawn hierarchies with this patter:
 ```rust
@@ -19,6 +21,18 @@ spawn!{
         // component;
         // .method(..);
     ]
+}
+```
+
+A simpler way to use triggers on self, basically means goated event control:
+```rust
+spawn!{
+    Node{ width:50px, height:50px, ..default()};
+    BackgroundColor(#ff0000);
+    > Pointer<Click> {
+        // 'this' = EnitityCommands
+        this.despawn();
+    }
 }
 ```
 
