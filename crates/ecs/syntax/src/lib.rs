@@ -67,17 +67,31 @@ use deki::*;
                 }
 
                 TokenTree::Punct(p) if p.as_char() == '>' => {
+                    let span_entity = p.span();
                     iter.next();
+                    let span_world = iter.next_if(|p|p.is_punct('>')).map(|p|p.span());
                     let mut event = iter.collect::<Vec<_>>();
                     next!{action = event.pop()}
                     match action {
                         TokenTree::Group(group) if group.delimiter().is_brace() => {
-                            commands.extend(qt!(
-                                ecmd.observe(move|trigger:Trigger<#(#event)*>,mut world: Commands|{
-                                    let mut this = world.entity(trigger.entity());
-                                    #group
-                                });
-                            ));
+                            let trigger = "trigger".ident_span(span_entity);
+                            commands.extend(match span_world  { 
+                                None => {
+                                    let this = "this".ident_span(span_entity);
+                                    qt!(ecmd.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                        let mut #this = world.entity(trigger.entity());
+                                        #group
+                                    });)
+                                },
+                                Some(span_world) => {
+                                    let entity = "entity".ident_span(span_entity);
+                                    let world = "world".ident_span(span_world);
+                                    qt!(ecmd.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                        let #entity = trigger.entity();
+                                        world.queue(move|#world:&mut World|#group);
+                                    });)
+                                }
+                            });
                         }
                         _ => {}
                     }
