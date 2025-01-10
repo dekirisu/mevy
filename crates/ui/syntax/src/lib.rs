@@ -195,8 +195,7 @@ use syn::LitFloat;
                         _ => "ZIndex"
                     }_ => "ZIndex"
                 };
-                let a = qt!{.0 = #val}.with_span(aspan);
-                out!{>name => "_" [][#a] [None]}
+                out!{>name => "_" [.0][#val] [None]}
             }
 
             "interaction" => {map.entry("Interaction");}
