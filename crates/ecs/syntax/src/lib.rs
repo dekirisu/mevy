@@ -39,8 +39,12 @@ use deki::*;
             next!{first = iter.peek()}
             match first {
 
-                TokenTree::Ident(_) => {
-                    let tokens = TokenStream::from_iter(iter);
+                TokenTree::Ident(ident) => {
+                    let first = ident.to_string();
+                    let mut tokens = TokenStream::from_iter(iter);
+                    if first.as_str() != "ui" {
+                        tokens = mevy_core_syntax::code(tokens);
+                    }
                     components.extend(qt!(#tokens,));
                 }
 

@@ -9,6 +9,9 @@ description = "token handling for mevy_ecs!"
 repository = "https://github.com/dekirisu/mevy/"
 keywords = ["proc","bevy"]
 
+[dependencies]
+mevy_core_syntax.workspace = true
+
 [dependencies.deki]
 workspace = true
 features = ["proc"]
