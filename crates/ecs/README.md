@@ -64,6 +64,26 @@ spawn!{
 }
 ```
 
+Easy way to address `ancestors` through a provided array, created within a macro call:
+- first entry: the direct parent
+- last entry: root entity of the current macro call
+```rust
+spawn!{
+    [[[[[[
+        SpecificEntity(ancestors[3]);
+    ]]]]]]
+}
+```
+
+To use the macro on an existing entity: The first thing sould be `&your_entity;`, which can be anything that returns a nentity:
+```rust
+    let entity = Entity::PLACEHOLDER;
+    spawn!{
+        &entity; // & -> anything that returns an entity
+        // ... further macro usage
+    }
+```
+
 ## Synergies with [mevy](https://github.com/dekirisu/mevy) 
 Using `mevy_core` macro `code!{}`, you can pair it with `code!{}` to write `Color`s and `Val`s neater:
 ```rust
