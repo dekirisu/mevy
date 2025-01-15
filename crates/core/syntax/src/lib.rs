@@ -10,13 +10,17 @@ use syn::LitFloat;
     /// - `0px`, `3%` ... => bevy ui Vals
     /// - `[>0px 2px]` css-like notation => bevy UiRect
     pub fn code (stream:TokenStream) -> TokenStream {
+        code_helper(stream,false)
+    }
+
+    fn code_helper(stream:TokenStream,in_group:bool) -> TokenStream {
         let mut list = stream.peek_iter();
         let mut out = qt!{};
-        loop{match code_next(&mut list) {
+        loop{match code_next(&mut list,in_group) {
             Step::Shift(stream) => out.extend(stream),
             Step::Base(tree) => match tree {
                 TokenTree::Group(group) => out.extend([
-                    TokenTree::Group(Group::new(group.delimiter(),code(group.stream())))
+                    TokenTree::Group(Group::new(group.delimiter(),code_helper(group.stream(),true)))
                 ]),
                 _ => out.extend([tree]),
             }
@@ -25,7 +29,7 @@ use syn::LitFloat;
         out
     }
 
-    fn code_next (iter:&mut PeekIter) -> Step<TokenTree,TokenStream> {
+    fn code_next (iter:&mut PeekIter,in_group:bool) -> Step<TokenTree,TokenStream> {
         exit!{next = iter.next()}
         match next.try_val_variant(true) {
             Check::Some(stream) => return Step::Shift(qt!{Val::#stream}),
@@ -37,7 +41,15 @@ use syn::LitFloat;
 
         if next.is_punct('!') && iter.peek().nay() {
             let default = "default".ident_span(next.span());
-            return Step::Shift(qt!{..Default::#default()});
+            return Step::Shift(match in_group {
+                true => qt!{..Default::#default()},
+                false => qt!{::#default()}
+            });
+        }
+
+        if next.is_punct('!') && iter.peek_punct() == ';' {
+            let default = "default".ident_span(next.span());
+            return Step::Shift(qt!{::#default()});
         }
 
         if next.is_punct('@'){
