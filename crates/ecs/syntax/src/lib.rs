@@ -15,7 +15,7 @@ use deki::*;
         stream: TokenStream,
         span: Span,
         custom_name: Option<Ident>,
-        mut parent: Vec<Ident>,
+        mut ancestors: Vec<Ident>,
         idx: &mut usize,
         spawn: &mut TokenStream,
         mutato: &mut TokenStream
@@ -24,12 +24,12 @@ use deki::*;
         let e0_provided = iter.next_if(|t|t.is_punct('&')).yay();
         let mut split = iter.split_punct(';').into_iter();
 
-        // prepare parents
-        let parents_tokens = if parent.is_empty(){
+        // prepare ancestors
+        let ancestors_tokens = if ancestors.is_empty(){
             qt!{}
         } else {
-            let parents_rev = parent.iter().rev();
-            qt!{let parents = [#(#parents_rev),*];}
+            let ancestors_rev = ancestors.iter().rev();
+            qt!{let ancestors = [#(#ancestors_rev),*];}
         };
 
         // handle naming & hierarchy
@@ -37,7 +37,7 @@ use deki::*;
         let name_tmp = name.to_string().ident();
         if 0 < *idx || !e0_provided {
             spawn.extend(qt!(let mut #name_tmp = world.spawn_empty();));
-            if let Some(parent) = parent.last() {spawn.extend(qt!(
+            if let Some(parent) = ancestors.last() {spawn.extend(qt!(
                 #name_tmp.set_parent(#parent);        
             ))}
             spawn.extend(qt!(let #name = #name_tmp.id();));
@@ -47,7 +47,7 @@ use deki::*;
         }
 
         *idx += 1;
-        parent.push(name_tmp);
+        ancestors.push(name_tmp);
 
         // 
         let mut components = qt!();
@@ -76,7 +76,7 @@ use deki::*;
                     }
                     spawn_syntax_recursive(
                         group.stream(), group.span_open(), group_name.take(),
-                        parent.clone(), idx, spawn, mutato
+                        ancestors.clone(), idx, spawn, mutato
                     );
                 }
 
@@ -121,7 +121,7 @@ use deki::*;
         }
 
         mutato.extend(qt!(
-            #parents_tokens
+            #ancestors_tokens
             let mut ecmd = world.entity(#name);
             ecmd.insert((#components));
             #commands
