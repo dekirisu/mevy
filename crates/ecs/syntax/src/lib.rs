@@ -8,7 +8,6 @@ use deki::*;
         let mut mutato = qt!();
         spawn_syntax_recursive(stream,Span::call_site(),None,vec![],&mut idx,&mut spawn,&mut mutato);
         let out = qt!{#spawn #mutato};
-        println!{"{out}"}
         out
     }
 
@@ -21,6 +20,10 @@ use deki::*;
         spawn: &mut TokenStream,
         mutato: &mut TokenStream
     ){
+        let mut iter = stream.peek_iter();
+        let e0_provided = iter.next_if(|t|t.is_punct('&')).yay();
+        let mut split = iter.split_punct(';').into_iter();
+
         // prepare parents
         let parents_tokens = if parent.is_empty(){
             qt!{}
@@ -32,11 +35,17 @@ use deki::*;
         // handle naming & hierarchy
         let name = custom_name.unwrap_or(format!("e{idx}").ident_span(span));
         let name_tmp = name.to_string().ident();
-        spawn.extend(qt!(let mut #name_tmp = world.spawn_empty();));
-        if let Some(parent) = parent.last() {spawn.extend(qt!(
-            #name_tmp.set_parent(#parent);        
-        ))}
-        spawn.extend(qt!(let #name = #name_tmp.id();));
+        if 0 < *idx || !e0_provided {
+            spawn.extend(qt!(let mut #name_tmp = world.spawn_empty();));
+            if let Some(parent) = parent.last() {spawn.extend(qt!(
+                #name_tmp.set_parent(#parent);        
+            ))}
+            spawn.extend(qt!(let #name = #name_tmp.id();));
+        } else {
+            let e0 = split.next().unwrap();
+            spawn.extend(qt!(let e0 = #e0;));
+        }
+
         *idx += 1;
         parent.push(name_tmp);
 
@@ -44,7 +53,7 @@ use deki::*;
         let mut components = qt!();
         let mut commands = qt!();
         let mut group_name = None;
-        for row in stream.peek_iter().split_punct(';'){
+        for row in split {
             let mut iter = row.peek_iter();
             next!{first = iter.peek()}
             match first {
