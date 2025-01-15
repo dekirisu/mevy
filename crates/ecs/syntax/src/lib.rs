@@ -6,8 +6,9 @@ use deki::*;
         let mut idx = 0;
         let mut spawn = qt!();
         let mut mutato = qt!();
-        spawn_syntax_recursive(stream,Span::call_site(),None,None,&mut idx,&mut spawn,&mut mutato);
+        spawn_syntax_recursive(stream,Span::call_site(),None,vec![],&mut idx,&mut spawn,&mut mutato);
         let out = qt!{#spawn #mutato};
+        println!{"{out}"}
         out
     }
 
@@ -15,20 +16,29 @@ use deki::*;
         stream: TokenStream,
         span: Span,
         custom_name: Option<Ident>,
-        parent: Option<Ident>,
+        mut parent: Vec<Ident>,
         idx: &mut usize,
         spawn: &mut TokenStream,
         mutato: &mut TokenStream
     ){
+        // prepare parents
+        let parents_tokens = if parent.is_empty(){
+            qt!{}
+        } else {
+            let parents_rev = parent.iter().rev();
+            qt!{let parents = [#(#parents_rev),*];}
+        };
+
         // handle naming & hierarchy
         let name = custom_name.unwrap_or(format!("e{idx}").ident_span(span));
         let name_tmp = name.to_string().ident();
         spawn.extend(qt!(let mut #name_tmp = world.spawn_empty();));
-        if let Some(parent) = parent {spawn.extend(qt!(
+        if let Some(parent) = parent.last() {spawn.extend(qt!(
             #name_tmp.set_parent(#parent);        
         ))}
         spawn.extend(qt!(let #name = #name_tmp.id();));
         *idx += 1;
+        parent.push(name_tmp);
 
         // 
         let mut components = qt!();
@@ -57,7 +67,7 @@ use deki::*;
                     }
                     spawn_syntax_recursive(
                         group.stream(), group.span_open(), group_name.take(),
-                        Some(name.clone()), idx, spawn, mutato
+                        parent.clone(), idx, spawn, mutato
                     );
                 }
 
@@ -102,6 +112,7 @@ use deki::*;
         }
 
         mutato.extend(qt!(
+            #parents_tokens
             let mut ecmd = world.entity(#name);
             ecmd.insert((#components));
             #commands
