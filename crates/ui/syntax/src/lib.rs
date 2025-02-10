@@ -1,7 +1,7 @@
 pub use deki::*;
 pub use mevy_core_syntax::*;
-use std::iter::zip;
-use syn::LitFloat;
+use std::{f32::consts::PI, iter::zip};
+use syn::{token::Token, LitFloat};
 
 // CSS -> Bundle \\
 
@@ -154,6 +154,31 @@ use syn::LitFloat;
                     Some(y) => out!{Transform => f32 [.scale.y][#y] [y_extra]},
                     None => out!{Transform => f32 [.scale.y][#x] [x_extra]}
                 }
+            }
+
+            "rotation" => {
+                let iter = iter.map(|t|match t {
+                    TokenTree::Literal(r) if r.is_numeric() => {
+                        let r: LitFloat = r.into();
+                        let val = r.base10_parse::<f32>().unwrap();
+                        let radian = match r.suffix() {
+                            "deg" => PI * val / 180.,
+                            _ => val
+                        };
+                        TokenTree::Literal(Literal::f32_suffixed(radian))
+                    }
+                    _ => {t}
+                });
+                let mut vec = iter.collect::<Vec<_>>();
+                let mut extra = None;
+                if let Some(TokenTree::Group(grp)) = vec.last() {
+                    if grp.delimiter().is_bracked(){
+                        extra = Some(grp.stream()); 
+                        vec.pop();
+                    }
+                }
+                let token = TokenStream::from_iter(vec); 
+                out!{Transform => Quat [.rotation][Quat::from_rotation_z(#token)] [extra]}
             }
 
             "background"|"background_color" => match iter.try_into_color().prepare() {
