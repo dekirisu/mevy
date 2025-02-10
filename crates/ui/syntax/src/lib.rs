@@ -235,6 +235,15 @@ use syn::LitFloat;
                 }
             }
 
+            "gap" => {
+                let fields = qar!([row_gap][column_gap]);
+                for (field,oval) in zip(fields,iter.into_vals()) {
+                    next!{val = oval.main}
+                    let field = field.with_span(oval.span);
+                    out!{Node => Val [.#field][#val] [oval.extra]}
+                }
+            }
+
  //\\
 
             "grid_auto_rows"|"grid_auto_columns" => {
