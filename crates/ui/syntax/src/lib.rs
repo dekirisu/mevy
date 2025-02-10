@@ -143,6 +143,19 @@ use syn::LitFloat;
 
         match field.to_string().as_str() {
 
+            "scale" => {
+                let x = iter.next();
+                let x_extra = iter.try_extra();
+                let y = iter.next();
+                let y_extra = iter.try_extra();
+                exit!{x = x}
+                out!{Transform => f32 [.scale.x][#x] [x_extra.clone()]}
+                match y {
+                    Some(y) => out!{Transform => f32 [.scale.y][#y] [y_extra]},
+                    None => out!{Transform => f32 [.scale.y][#x] [x_extra]}
+                }
+            }
+
             "background"|"background_color" => match iter.try_into_color().prepare() {
                 Some((color,_,extra)) => out!{BackgroundColor => Color [.0][#color] [extra]},
             _=>()}
