@@ -94,11 +94,13 @@ use deki::*;
                     match action {
                         TokenTree::Group(group) if group.delimiter().is_brace() => {
                             let trigger = "trigger".ident_span(span_entity);
+                            let let_event = "event".ident_span(span_entity);
                             commands.extend(match span_world  { 
                                 None => {
                                     let this = "this".ident_span(span_entity);
                                     qt!(ecmd.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
                                         let mut #this = world.entity(trigger.entity());
+                                        let #let_event = trigger.event();
                                         #group
                                     });)
                                 },
@@ -107,6 +109,7 @@ use deki::*;
                                     let world = "world".ident_span(span_world);
                                     qt!(ecmd.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
                                         let #entity = trigger.entity();
+                                        let #let_event = trigger.event().clone();
                                         world.queue(move|#world:&mut World|#group);
                                     });)
                                 }
