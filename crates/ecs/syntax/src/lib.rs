@@ -50,7 +50,6 @@ use deki::*;
         ancestors.push(name_tmp);
 
         // 
-        let mut components = qt!();
         let mut commands = qt!();
         let mut group_name = None;
         for row in split {
@@ -64,7 +63,7 @@ use deki::*;
                     if first.as_str() != "ui" {
                         tokens = mevy_core_syntax::code(tokens);
                     }
-                    components.extend(qt!(#tokens,));
+                    commands.extend(qt!(ecmd.insert(#tokens);));
                 }
 
                 TokenTree::Group(g) if g.delimiter().is_bracked() => for group in iter {
@@ -126,7 +125,6 @@ use deki::*;
         mutato.extend(qt!(
             #ancestors_tokens
             let mut ecmd = world.entity(#name);
-            ecmd.insert((#components));
             #commands
         ));
     }
