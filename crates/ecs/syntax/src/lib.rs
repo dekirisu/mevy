@@ -5,9 +5,10 @@ use deki::*;
     pub fn spawn_syntax(stream:TokenStream) -> TokenStream {
         let mut idx = 0;
         let mut spawn = qt!();
-        let mut mutato = qt!();
+        let mut mutato = vec![];
         spawn_syntax_recursive(stream,Span::call_site(),None,vec![],&mut idx,&mut spawn,&mut mutato);
-        let out = qt!{#spawn #mutato};
+        mutato.reverse();
+        let out = qt!{#spawn #(#mutato)*};
         out
     }
 
@@ -18,7 +19,7 @@ use deki::*;
         mut ancestors: Vec<Ident>,
         idx: &mut usize,
         spawn: &mut TokenStream,
-        mutato: &mut TokenStream
+        mutato: &mut Vec<TokenStream>
     ){
         let mut iter = stream.peek_iter();
         let e0_provided = iter.next_if(|t|t.is_punct('&')).yay();
@@ -122,7 +123,7 @@ use deki::*;
             }
         }
 
-        mutato.extend(qt!(
+        mutato.push(qt!(
             #ancestors_tokens
             let mut ecmd = world.entity(#name);
             #commands
