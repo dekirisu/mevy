@@ -96,7 +96,9 @@ use deki::*;
 
                 TokenTree::Punct(p) if p.as_char() == '.' => {
                     iter.next();
-                    commands.extend(qt!(this.#(#iter)*;));
+                    let mut tokens = TokenStream::from_iter(iter);
+                    tokens = mevy_core_syntax::code(tokens);
+                    commands.extend(qt!(this.#tokens;));
                 }
 
                 TokenTree::Punct(p) if p.as_char() == '>' => {
