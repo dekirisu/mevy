@@ -234,7 +234,12 @@ use syn::{token::Token, LitFloat};
                 }
             }
 
-            "z_index"|"zindex" => if let Some(val) = iter.next() {
+            "z_index"|"zindex" => {
+                let pre = match iter.peek_punct() {
+                    '-' => {iter.next();qt!(-)},
+                    _ => qt!()
+                };
+                exit!{val = iter.next()}
                 exit!{if !val.is_numeric()}
                 let name = match iter.next() {
                     Some(tok) => match &tok.to_string()[..1] {
@@ -242,7 +247,7 @@ use syn::{token::Token, LitFloat};
                         _ => "ZIndex"
                     }_ => "ZIndex"
                 };
-                out!{>name => "_" [.0][#val] [None]}
+                out!{>name => "_" [.0][#pre #val] [None]}
             }
 
             "interaction" => {map.entry("Interaction");}
