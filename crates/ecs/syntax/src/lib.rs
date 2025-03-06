@@ -68,12 +68,14 @@ use deki::*;
             match first {
 
                 TokenTree::Ident(ident) => {
-                    let first = ident.to_string();
+                    next!{first = ident.to_string().chars().next()}
+                    let ident = iter.next().unwrap();
+                    let is_macro = first.is_lowercase() && iter.peek_punct() == '!';
                     let mut tokens = TokenStream::from_iter(iter);
-                    if first.as_str() != "ui" {
+                    if !is_macro {
                         tokens = mevy_core_syntax::code(tokens);
                     }
-                    commands.extend(qt!(this.insert(#tokens);));
+                    commands.extend(qt!(this.insert(#ident #tokens);));
                 }
 
                 TokenTree::Group(g) if g.delimiter().is_brace() => for group in iter {
