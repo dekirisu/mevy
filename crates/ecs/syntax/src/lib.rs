@@ -64,7 +64,12 @@ use deki::*;
                     if first.as_str() != "ui" {
                         tokens = mevy_core_syntax::code(tokens);
                     }
-                    commands.extend(qt!(ecmd.insert(#tokens);));
+                    commands.extend(qt!(this.insert(#tokens);));
+                }
+
+                TokenTree::Group(g) if g.delimiter().is_brace() => for group in iter {
+                    next!{*TokenTree::Group(group) = group}
+                    commands.extend(group.into_token_stream()); 
                 }
 
                 TokenTree::Group(g) if g.delimiter().is_bracked() => for group in iter {
@@ -82,7 +87,7 @@ use deki::*;
 
                 TokenTree::Punct(p) if p.as_char() == '.' => {
                     iter.next();
-                    commands.extend(qt!(ecmd.#(#iter)*;));
+                    commands.extend(qt!(this.#(#iter)*;));
                 }
 
                 TokenTree::Punct(p) if p.as_char() == '>' => {
@@ -98,7 +103,7 @@ use deki::*;
                             commands.extend(match span_world  { 
                                 None => {
                                     let this = "this".ident_span(span_entity);
-                                    qt!(ecmd.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                    qt!(this.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
                                         let mut #this = world.entity(trigger.entity());
                                         let #let_event = trigger.event();
                                         #group
@@ -107,7 +112,7 @@ use deki::*;
                                 Some(span_world) => {
                                     let entity = "entity".ident_span(span_entity);
                                     let world = "world".ident_span(span_world);
-                                    qt!(ecmd.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                    qt!(this.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
                                         let #entity = trigger.entity();
                                         let #let_event = trigger.event().clone();
                                         world.queue(move|#world:&mut World|#group);
@@ -125,7 +130,7 @@ use deki::*;
 
         mutato.push(qt!(
             #ancestors_tokens
-            let mut ecmd = world.entity(#name);
+            let mut this = world.entity(#name);
             #commands
         ));
     }
