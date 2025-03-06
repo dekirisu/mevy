@@ -282,6 +282,14 @@ use syn::{token::Token, LitFloat};
                 }
             }
 
+            "position" => {
+                let field = TokenTree::Ident("position_type".ident_span(field.span()));
+                let enu = field.clone().risk_ident().to_case(Case::Pascal);
+                kill!{val = iter.next(),risk_ident().to_case(Case::Pascal)}
+                out!{Node => _ [.#field][#enu::#val] [None]}
+            }
+
+
  //\\
 
             "grid_auto_rows"|"grid_auto_columns" => {
