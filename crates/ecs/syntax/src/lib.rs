@@ -23,9 +23,10 @@ use deki::*;
     ){
         let mut iter = stream.peek_iter();
         let e0_provided = iter.next_if(|t|t.is_punct('&')).yay();
+        let this_provide = !e0_provided && iter.next_if(|t|t.is_punct('*')).yay();
         let mut split = iter.split_punct(';').into_iter();
 
-        // prepare ancestors
+       // prepare ancestors
         let ancestors_tokens = if ancestors.is_empty(){
             qt!{}
         } else {
@@ -36,7 +37,15 @@ use deki::*;
         // handle naming & hierarchy
         let name = custom_name.unwrap_or(format!("e{idx}").ident_span(span));
         let name_tmp = name.to_string().ident();
-        if 0 < *idx || !e0_provided {
+ 
+        if *idx == 0 && this_provide {
+            let e0 = split.next().unwrap();
+            spawn.extend(qt!(
+                let e0 = #e0.id();
+                let mut world = #e0.commands();
+            ));
+        }
+        else if 0 < *idx || !e0_provided {
             spawn.extend(qt!(let mut #name_tmp = world.spawn_empty();));
             if let Some(parent) = ancestors.last() {spawn.extend(qt!(
                 #name_tmp.set_parent(#parent);        
@@ -47,7 +56,7 @@ use deki::*;
             spawn.extend(qt!(let e0 = #e0;));
         }
 
-        *idx += 1;
+       *idx += 1;
         ancestors.push(name_tmp);
 
         // 
