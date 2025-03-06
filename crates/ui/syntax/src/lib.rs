@@ -181,6 +181,15 @@ use syn::{token::Token, LitFloat};
                 out!{Transform => Quat [.rotation][Quat::from_rotation_z(#token)] [extra]}
             }
 
+            "color"|"font_color" => match iter.try_into_color().prepare() {
+                Some((color,_,extra)) => out!{TextColor => Color [.0][#color] [extra]},
+            _=>()}
+
+            "font_size" => {
+                kill!{val = iter.next()}
+                out!{TextFont => f32 [.#field][#val as f32] [None]}
+            }
+
             "background"|"background_color" => match iter.try_into_color().prepare() {
                 Some((color,_,extra)) => out!{BackgroundColor => Color [.0][#color] [extra]},
             _=>()}
@@ -288,7 +297,6 @@ use syn::{token::Token, LitFloat};
                 kill!{val = iter.next(),risk_ident().to_case(Case::Pascal)}
                 out!{Node => _ [.#field][#enu::#val] [None]}
             }
-
 
  //\\
 
