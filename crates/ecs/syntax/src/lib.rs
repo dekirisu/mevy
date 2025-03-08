@@ -78,6 +78,12 @@ use deki::*;
                     commands.extend(qt!(this.insert(#ident #tokens);));
                 }
 
+                TokenTree::Group(g) if g.delimiter().is_parenthesis() => {
+                    let mut tokens = TokenStream::from_iter(iter);
+                    tokens = mevy_core_syntax::code(tokens);
+                    commands.extend(qt!(this.insert(#tokens);));
+                }
+
                 TokenTree::Group(g) if g.delimiter().is_brace() => for group in iter {
                     next!{*TokenTree::Group(group) = group}
                     commands.extend(group.into_token_stream()); 
