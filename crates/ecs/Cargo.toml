@@ -14,3 +14,7 @@ proc-macro = true
 
 [dependencies]
 mevy_ecs_syntax.workspace = true
+
+[dependencies.deki]
+workspace = true
+features = ["proc"]
