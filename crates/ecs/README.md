@@ -15,9 +15,21 @@ This crate is part of [mevy](https://github.com/dekirisu/mevy) (tl;dr: more neat
 The macro `spawn!{..}` allows you to spawn hierarchies with this patter:
 ```rust
 spawn!{
-    // component;
-    // .method(..);
-    [optional_child_name][
+
+    // add components:
+    Node!; // '!' is short for ::default()
+    Outline{
+        width: 2px, // 'Val's can be written css-like
+        offset: 10%,
+    !}; // '!' in a struct is short for ..default()
+
+    // using methods:
+    .remove::<Node>();
+    .observe(..);
+    .queue(..);
+
+    // spawn children
+    [optional_child_name]
         // component;
         // .method(..);
     ]
@@ -28,16 +40,25 @@ A simpler way to use triggers on self, basically means goated event control:
 ```rust
 spawn!{
     Node{ width:50px, height:50px, ..default()};
-    BackgroundColor(#ff0000);
+    BackgroundColor(#ff0000); 
+    // Using '>'
     > Pointer<Click> {
+        // Provided variables:
         // 'this' = EnitityCommands
+        // 'event' = e.g. &Pointer<Click>
         this.despawn();
+    }
+    // Using '>>'
+    >> Pointer<Click> {
+        // Provided variables:
+        // 'world' = mut World
+        // 'entity' = Entity
+        // 'event' = e.g. &Pointer<Click>
     }
 }
 ```
 
-This macro expects a `world` variable - which is anything that can spawn things.
-- This means it works with `Commands`, `World`, things that `impl ChildBuild`, ...
+This macro expects a `mut world: Commands` variable (or `world: &mut Commands`)
 ```rust
 fn startup(mut world: Commands){
     spawn!{Camera2d::default()}
