@@ -7,7 +7,6 @@ use deki::*;
         let mut spawn = qt!();
         let mut mutato = vec![];
         spawn_syntax_recursive(stream,Span::call_site(),None,vec![],&mut idx,&mut spawn,&mut mutato);
-        mutato.reverse();
         let out = qt!{#spawn #(#mutato)*};
         out
     }
@@ -96,6 +95,16 @@ use deki::*;
                         group_name = Some(n);
                         continue
                     }
+
+                    if !commands.is_empty() {
+                        mutato.push(qt!(
+                            #ancestors_tokens
+                            let mut this = world.entity(#name);
+                            #commands
+                        ));
+                        commands = qt!();
+                    }
+
                     spawn_syntax_recursive(
                         group.stream(), group.span_open(), group_name.take(),
                         ancestors.clone(), idx, spawn, mutato
@@ -147,11 +156,13 @@ use deki::*;
             }
         }
 
-        mutato.push(qt!(
-            #ancestors_tokens
-            let mut this = world.entity(#name);
-            #commands
-        ));
+        if !commands.is_empty() {
+            mutato.push(qt!(
+                #ancestors_tokens
+                let mut this = world.entity(#name);
+                #commands
+            ));
+        }
     }
 
 // EOF \\
