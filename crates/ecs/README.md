@@ -7,40 +7,132 @@
     <a href="https://discord.gg/kevWvBuPFg" style="position:relative"><img src="https://img.shields.io/discord/515100001903312898"></a>
 </p>
 
+These are ONLY proc-macros (no additional traits, structs, fns etc.).
 This crate is part of [mevy](https://github.com/dekirisu/mevy) (tl;dr: more neat macros) so take a look! 🦆
 
-
-
-## A simpler way of spawning
-The macro `spawn!{..}` allows you to spawn hierarchies with this patter:
+# Rough Overview
 ```rust
-spawn!{
-
-    // add components:
-    Node!; // '!' is short for ::default()
-    Outline{
-        width: 2px, // 'Val's can be written css-like
-        offset: 10%,
-    !}; // '!' in a struct is short for ..default()
-
-    // using methods:
-    .remove::<Node>();
-    .observe(..);
-    .queue(..);
-
-    // spawn children
-    [optional_child_name]
-        // component;
-        // .method(..);
+entity!{
+    <..>                  // World/Entity Selection
+    Bundle::new(..);      // Insert Bundle to Selected
+    .observe(..);         // Use a method
+    {..}                  // Free code block w/ 'this: EntityCommands'
+    > Pointer<Click>{..}  // Quick Observe w/ 'this: EntityCommands'
+    >> Pointer<Click>{..} // Quick Observe w/ 'world: World', 'entity: Entity'
+    [                     // Spawn a Child
+        Bundle::new(..);  // Insert Bundle to Child
+        .observe(..);     // Use method on Childs EnitityCommands/EntityWorldMut
+        {ancestors[0]}    // ancestors: Vec<Entity>
+                          // first = parent, last = 'selected root'
+    ]
+    [named_child][        // Spawn a Child with a name
+        // ..
     ]
 }
 ```
 
+# Alternative Syntax
+```rust 
+entity!{
+    <..>
+
+    Bundle!;       // = Bundle::default();
+    Bundle{a:3,!}; // = Bundle{a:3,..default()};
+    Bundle: 3;     // = Bundle::new(3);
+    bundle_fn: 3;  // = bundle_fn(3);
+    macro!: 3, 4;  // = macro!{3,4};
+    .method: 5;    // = .macro(5);
+    
+    // any plain Hex-Code = [Color]
+    BorderColor(#ff0000);
+
+    // css like [Val]s
+    Node{
+        left:   10px;
+        top:    5%;
+        width:  3vw;
+        height: 6vmax;
+    !};
+
+}
+```
+
+# World/Entity Selection
+The first entry of the macro determines which world access is used and which entity is aimed.
+```rust
+entity!{
+
+    <cmd>       // SPAWN an entity using this [Commands]
+                // (no entry) assumes a 'world: Commands'
+
+    <cmd|enty>  // MODIFY an entity: pass a Commands | Entity
+    <|enty>     // assumes a 'world: Commands'
+    <cmd|>      // assumes a 'me: Entity'
+    <|>         // assumes both
+
+    <+world>    // SPAWN using this [World]
+    <+world|..> // MODIFY using this [World]
+    <+> <+|..>  // assumes a 'world: World'
+
+    <-world>    // SPAWN using this [DeferredWorld]
+    <-world|..> // MODIFY using this [DeferredWorld]
+    <-> <-|..>  // assumes a 'world: DeferredWorld'
+
+    <*this>     // MODIFY using this [EntityCommands]
+    <*>         // assumes a 'world: EntityCommands'
+    <>          // assumes a 'this: EntityCommands'
+
+    <^this>     // MODIFY the parent of a [ChildBuilder]
+    <^>         // assumes a 'world: ChildBuilder'
+
+    <+*this>    // MODIFY using this [EntityWorldMut]
+    <+*>        // assumes a 'world: EntityWorldMut'
+
+    <|#Comp>         // target EVERY entity with this component
+    <|#Comp.get()>   // ..or an [Option<Entity>] of the component
+    <|#*Comp.all()>  // ..or any iterator over [Entity]s
+    
+    <|!#Comp>        // target THE ONLY (.single()) entity, enables 'leaking'
+    <|!#Comp.0>      // ..or an [Entity] on the component
+
+    <|@Comp.get()>   // target an [Option<Entity>] on a resource 
+    <|@*Comp.all()>  // ..or any iterator over [Entity]s
+    
+    <|!@Comp.0>      // target an [Entity] on a resource, enables 'leaking'
+
+}
+```
+
+# Leaking / Returning
+If the selector can 'leak' entities, you can use one  of those symbold a the END of the macro:
+- `>` 'leak': every spawned entity is available in this scope
+- `<` 'return': returns the root entity
+
+```rust
+let enty = entity!{
+    Bundle::new(5);
+<};
+
+entity!{
+    Bundle::new(5);
+    []
+    [named][]
+>}    
+me;   // the spawned entity
+e1;   // the unnamed child entity
+named // the named child entity
+
+entity!{
+    <|!#Comp>
+    [named][]
+>}
+named // resource/component selectors only leak children
+```
+
+## Quick Observe
 A simpler way to use triggers on self, basically means goated event control:
 ```rust
 spawn!{
-    Node{ width:50px, height:50px, ..default()};
-    BackgroundColor(#ff0000); 
     // Using '>'
     > Pointer<Click> {
         // Provided variables:
@@ -58,13 +150,13 @@ spawn!{
 }
 ```
 
-This macro expects a `mut world: Commands` variable (or `world: &mut Commands`)
 ```rust
 fn startup(mut world: Commands){
     spawn!{Camera2d::default()}
 }
 ```
 
+# Child Names
 The 'Child Names' are variables containing the child entity.
 - Inside the macro they can be used anywhere, even 'before' you wrote them
 - If none is provided - one will be generated: `e{number}`: `e0`, `e1`, ...
@@ -96,27 +188,35 @@ spawn!{
 }
 ```
 
-To use the macro on an existing entity: The first thing sould be `&your_entity;`, which can be anything that returns a nentity:
-```rust
-    let entity = Entity::PLACEHOLDER;
-    spawn!{
-        &entity; // & -> anything that returns an entity
-        // ... further macro usage
+## Example
+Combining the things you could write thing like this:
+```rust 
+fn startup(mut world: Commands){
+    entity!{
+        Name: "Root";
+        Node{ padding:10px, !};
+        BackgroundColor(#ff0000);
+        Marker;
+        [nice_text][
+            Name: "Some Name";
+            Text: "Hello World";
+            > Pointer<Click> {this.despawn();};
+        ]
     }
+}
+```
+
+And modify it by a marker:
+```rust
+fn update(mut world:Commands){
+    entity!{
+        <|#Marker>
+        BackgroundColor(#00ff00);
+    }
+}
 ```
 
 ## Synergies with [mevy](https://github.com/dekirisu/mevy) 
-Using `mevy_core` macro `code!{}`, you can pair it with `code!{}` to write `Color`s and `Val`s neater:
-```rust
-code!{spawn!{
-    BackgroundColor(#ff0000);
-    Node{ width:50px, height:10%, margin:[>5px], ..default() }
-    [
-        // child ui
-    ]
-}}
-```
-
 Using `mevy_ui` macro `ui!{}`, it's a bit like html/css:
 ```rust
 spawn!{
@@ -131,7 +231,3 @@ spawn!{
     ))]
 }
 ```
-
-
-
-
