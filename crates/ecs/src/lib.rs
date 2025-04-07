@@ -3,6 +3,11 @@ use proc_macro::TokenStream as CompilerTokens;
 use deki::*;
 
 #[proc_macro]
+pub fn entity(stream:CompilerTokens) -> CompilerTokens {
+    world_spawn_syntax(stream.into()).into()
+}
+
+#[proc_macro]
 pub fn spawn(stream:CompilerTokens) -> CompilerTokens {
     spawn_syntax(stream.into()).into()
 }
