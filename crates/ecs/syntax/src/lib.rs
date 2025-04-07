@@ -211,7 +211,8 @@ use deki::*;
 
                     'n' => Some((qt!{
                         let Some(data) = world.get_resource::<#typi>() else {return};
-                        let Some(me) = data .#path else {return};
+                        #[allow(for_loops_over_fallibles)]
+                        for me in data. #path
                     },false)),
 
                     _ => None
@@ -261,6 +262,17 @@ use deki::*;
         }
     }
 
+    /// (_,is_forced?)
+    fn query_to_redirect(query:TokenStream) -> TokenStream {
+        let iter = query.peek_iter();
+        let [typi,path] = peek_split_punct_once(iter,'.');
+        qt!{
+            let Some(data) = world.get::<#typi>(me) else {continue};
+            #[allow(for_loops_over_fallibles)]
+            for me in data. #path.collect::<Vec<_>>()
+        }
+    }
+
 // World Spawning \\
 
     pub fn world_spawn_syntax(stream:TokenStream) -> TokenStream {
@@ -271,6 +283,12 @@ use deki::*;
 
         let mut iter = stream.peek_iter();
         let angled = check_angled(&mut iter);
+
+        let mut chain = vec![];
+        while let Some(mut query) = check_angled(&mut iter) {
+            chain.push(query_to_redirect(query.swap_remove(0)));
+        }
+        chain.reverse();
 
         // NOTE: Mind the clone, try to dodge?
         let mut vec = iter.collect::<Vec<_>>();
@@ -301,6 +319,15 @@ use deki::*;
             exec_on_world = true;
         } else {
             on_current.extend(wentry.init_entity());
+            on_world.extend(qt!{
+                #[allow(for_loops_over_fallibles)]
+                for _ in Some(())
+            });
+        }
+
+        if !chain.is_empty() {
+            is_forced = false;
+            exec_on_world = true;
         }
 
         let spawn_on_world = !is_forced && exec_on_world;
@@ -317,8 +344,18 @@ use deki::*;
         if spawn_on_world {on_world_block.extend(spawn)} 
         else {on_current.extend(spawn)}
 
-        on_world_block.extend(qt!(#parenting #(#mutato)*));
-        
+        if chain.is_empty() {
+            on_world_block.extend(qt!(#parenting #(#mutato)*));
+        } else {
+            let mut chain = chain.into_iter();
+            let header = chain.next().unwrap();
+            let mut block = qt!{#header{ #parenting #(#mutato)* }};
+            for header in chain {
+                block = qt!{#header{#block}};
+            }
+            on_world_block.extend(block);
+        }
+
         if exec_on_world{
             on_world.extend(qt!{{#on_world_block}});
             let wrap = wentry.world_wrap(on_world);
