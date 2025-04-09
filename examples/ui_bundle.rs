@@ -13,11 +13,12 @@ fn startup(mut cmd:Commands){
     cmd.spawn(ui!((
         padding: 24px;
         column_gap: 24px;
+        box_shadow: _ _ 0px 0px;
     )))
     .with_children(|p|{
         p.spawn(neat_box())
         .observe(|trigger:Trigger<Pointer<Click>>,mut query:Query<(&mut Node,&mut BoxShadow)>|{
-            let (mut node,mut box_shadow) = query.get_mut(trigger.entity()).unwrap();
+            let (mut node,mut box_shadow) = query.get_mut(trigger.observer()).unwrap();
             bigger_border_h(&mut node, &mut box_shadow);
         });
         p.spawn(same_neat_box());
@@ -52,13 +53,13 @@ fn startup(mut cmd:Commands){
             border: [>5px],
             ..default()
         },
-        BoxShadow{
+        BoxShadow(vec![ShadowStyle{
             color:         #ffaa44,
             x_offset:      10%,
             y_offset:      10%,
             blur_radius:   3px,
             spread_radius: 8px,
-        },
+        }]),
         BackgroundColor(#ffffff),
         BorderColor(#ff0000),
         BorderRadius::all(6px),

@@ -59,11 +59,12 @@ members = [
 
 
 [dev-dependencies.bevy]
-version = "0.15"
+version = "0.16.0-rc.3"
 default-features = false
 features = [
     "bevy_window",
     "bevy_winit",
     "bevy_ui",
+    "bevy_picking",
     "x11"
 ]

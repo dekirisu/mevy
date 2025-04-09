@@ -9,10 +9,9 @@ pub fn main() {
 }
 
 fn startup(mut world:Commands){
-    spawn!{Camera2d::default()}
+    entity!{Camera2d::default()}
 
-
-    spawn!{
+    entity!{
         ui!((
             size: 80px 50px;
             background: gray;

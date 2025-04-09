@@ -10,8 +10,8 @@ pub fn main() {
 }
 
 fn startup(mut world:Commands){
-    spawn!{Camera2d}
-    spawn!{
+    entity!{Camera2d}
+    entity!{
         BackgroundColor(#ff0000);
         BorderColor(#00ffff);
         Node{ width:80px, height:80px, margin:[>16px], !};
@@ -35,11 +35,11 @@ fn startup(mut world:Commands){
 }
 
 fn destroy_on <E:Debug+Clone+Reflect> (entity:Entity) -> impl Fn(Trigger<Pointer<E>>,Commands) {
-    move|_,mut world|{if let Some(mut ecmd) = world.get_entity(entity){
+    move|_,mut world|{if let Ok(mut ecmd) = world.get_entity(entity){
         ecmd.despawn();
     }}
 }
 
 fn destroy_self_on <E:Debug+Clone+Reflect> (trigger:Trigger<Pointer<E>>,mut cmd:Commands) {
-    cmd.entity(trigger.entity()).despawn();
+    cmd.entity(trigger.observer()).despawn();
 }

@@ -1,7 +1,7 @@
 pub use deki::*;
 pub use mevy_core_syntax::*;
 use std::{f32::consts::PI, iter::zip};
-use syn::{token::Token, LitFloat};
+use syn::LitFloat;
 
 // CSS -> Bundle \\
 
@@ -63,7 +63,10 @@ use syn::{token::Token, LitFloat};
 
             let defaults = TokenStream::from_iter(self.defaults.keys.iter().map(|s|{
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
-                qt!{let mut #var = #typ::default();}
+                match s.as_str() {
+                    "BoxShadow" => qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);},
+                    _ => qt!{let mut #var = #typ::default();}
+                }
             }));
             let bundle = self.variables.keys.iter().map(|s|s.ident());
             let out = "bundle".ident_span(after);
@@ -122,7 +125,6 @@ use syn::{token::Token, LitFloat};
 
     pub fn ui_style_sheet(field:TokenTree,iter:&mut PeekIter) -> UiMap {
         iter.skip_puncts("#-");
-        let aspan = TokenStream::from_iter(iter.clone()).span();
         let mut map = UiMap::new();
 
         macro_rules! out {
@@ -226,11 +228,11 @@ use syn::{token::Token, LitFloat};
                 for (field,oval) in zip(fields,iter.into_vals()) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
-                    out!{BoxShadow => Val [.#field][#val] [oval.extra]}
+                    out!{BoxShadow => Val [[0].#field][#val] [oval.extra]}
                 }
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
-                    out!{BoxShadow => Color [.#field][#color] [extra]}
+                    out!{BoxShadow => Color [[0].#field][#color] [extra]}
                 }
             }
 

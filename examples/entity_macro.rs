@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 #![allow(path_statements)]
-use bevy::{ecs::world::DeferredWorld, prelude::*};
+use bevy::{ecs::{relationship::RelatedSpawnerCommands, world::DeferredWorld}, prelude::*};
 use mevy::*;
 pub fn main() {}
 
@@ -176,7 +176,7 @@ pub fn main() {}
         }
     }
 
-    fn modify_with_child_builder( mut cbuild: ChildBuilder ){
+    fn modify_with_child_builder<'a>( mut cbuild: RelatedSpawnerCommands<'a,ChildOf> ){
         entity!{
             <^cbuild>
             Transform!;
@@ -216,7 +216,7 @@ pub fn main() {}
         }
     }
 
-    fn modify_with_child_builder_implied( mut world: ChildBuilder ){
+    fn modify_with_child_builder_implied<'a>( mut world: RelatedSpawnerCommands<'a,ChildOf> ){
         entity!{<^>
             Transform!;
             [spawned][Transform!]
