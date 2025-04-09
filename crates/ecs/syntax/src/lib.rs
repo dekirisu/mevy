@@ -266,12 +266,19 @@ use deki::*;
 
     /// (_,is_forced?)
     fn query_to_redirect(query:TokenStream) -> TokenStream {
-        let iter = query.peek_iter();
+        let mut vec = query.into_iter().collect::<Vec<_>>();
+        let mut post = qt!{.collect::<Vec<_>>()};
+        if let Some(a) = vec.last(){if a.is_punct('!'){
+            vec.pop();
+            post = qt!{};
+        }}
+
+        let iter = TokenStream::from_iter(vec).peek_iter();
         let [typi,path] = peek_split_punct_once(iter,'.');
         qt!{
             let Some(data) = world.get::<#typi>(me) else {continue};
             #[allow(for_loops_over_fallibles)]
-            for me in data. #path.collect::<Vec<_>>()
+            for me in data. #path #post
         }
     }
 
