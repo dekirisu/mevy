@@ -103,6 +103,18 @@ entity!{
 }
 ```
 
+# Redirection
+After the initial selection of entities, you can redirect it to entities of a component.
+```rust
+entity!{
+    <world|#Marker>             // select: every Entity with [Marker]
+    <Children.get(0).cloned()!> // > select: first child, if available
+    <Children.iter()>           // >> select all children
+    Visibility::Hidden;         // hide all of them
+    .despawn();                 // despawn all of them
+}
+```
+
 # Leaking / Returning
 If the selector can 'leak' entities, you can use one  of those symbold a the END of the macro:
 - `>` 'leak': every spawned entity is available in this scope
