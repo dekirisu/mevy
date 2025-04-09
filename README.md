@@ -24,14 +24,29 @@ Spawn children just by stating `[]` - the 'names' are just variables containing 
 - [read more](crates/ecs/README.md) or see [this example](examples/ecs_simple_spawn.rs).
 
 ```rust
-spawn!{
+entity!{
+    <world> // pass a mut World, Commands, ... variable
+    SpecificChild(optional_child_name); // insert component
+    .observe(..);                       // use method
+    > Pointer<Click>{..};               // quick observe (e.g. 'on click')
     // component/bundle;
     // .method(..);
-    SpecificChild(optional_child_name);
     [optional_child_name][
         // component;
         // .method(..);
     ]
+}
+```
+
+Modify entities in a 'quick and dirty' way: 
+- [read more](crates/ecs/README.md) or see [this example](examples/entity_macro.rs).
+
+```rust
+entity!{
+    <world|#Component> // select every entity with this Component
+    <Children.iter()>  // > select all children of those
+    <Children.iter()>  // >> infinitely chain those selectors
+    .despawn();        // despawn all of the last selected
 }
 ```
 
