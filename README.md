@@ -12,11 +12,31 @@
 </p
 
 A **growing** set of **m**acros which add some witchcraft into b**evy**, currently available: 🪄
+- **Simpler** `Entity` spawning & modifying
 - **Style Sheet Notation** for `bevy_ui` components (and your own) - `ui!(( width: 20px; ))`
 - **Simplified Notation** for `Color`, `Val` and `UiRect` - `code!{ let red = #ff0000; //..any code }`
 
 > [!IMPORTANT]
 > This crate is meant to provide macros only - no additional bevy plugins, resources, components or systems
+
+## Setup
+Multiple bevy versions are supported and managed by features:
+```toml
+# bevy 0.16 w/ mevy_ui
+mevy = "0.2"
+ 
+# bevy 0.16 w/o mevy_ui
+mevy = {version="0.2",default-features=false,features=["0.16"]}
+
+# bevy 0.15 w/ mevy_ui
+mevy = {version="0.2",default-features=false,features=["0.15","ui"]}
+```
+
+Then just `use` all of it:
+```rust
+use bevy::prelude::*;
+use mevy::*;
+```
 
 ## Simpler Hierarchy Spawning
 Spawn children just by stating `[]` - the 'names' are just variables containing their `Entity`
@@ -95,12 +115,6 @@ code!{
 }
 println!{"{color2:?}"}
 ```
-
-## Version
-Just to mention the obvious:
-- Macros are token-based, meaning they aren't hard-bound to a specific bevy version
-- **However:** These are mainly designed for **bevy 0.15** and onwards
-- The closer your bevy version is to **0.15**, the more things will work
 
 ## Design
 Crates are separated into:
