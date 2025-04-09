@@ -41,6 +41,16 @@ pub fn main() {}
         }
     }
 
+    fn modify_with_commands_redir( mut commands: Commands, entity: Entity ){
+        entity!{
+            <commands|entity>
+            <Children.get(0).cloned()!>   // select first child, if available
+            <Children.iter()>             // select all children of selected
+            Visibility::Hidden;           // hide all of them
+            .despawn();                   // despawn all of them
+        }
+    }
+
     /// same as [modify_with_commands]
     fn modify_with_named_commands( mut world: Commands, entity: Entity ){
         entity!{
