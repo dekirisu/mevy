@@ -15,3 +15,8 @@ mevy_core_syntax.workspace = true
 [dependencies.deki]
 workspace = true
 features = ["proc"]
+
+[features]
+default = ["0.16"]
+"0.15" = []
+"0.16" = []

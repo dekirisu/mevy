@@ -76,11 +76,14 @@ use deki::*;
             Self::EntityCommands{entry} 
             |  Self::EntityWorldMut{entry}
             => Some(qt!{#entry.id()}),
-            Self::ChildBuilder{entry} => Some(qt!{#entry.target_entity()}),
             Self::Commands{entry:_,entity} 
             | Self::DeferredWorld {entry:_,entity}
             | Self::World {entry:_,entity} 
             => entity.clone(),
+            #[cfg(feature="0.16")]
+            Self::ChildBuilder{entry} => Some(qt!{#entry.target_entity()}),
+            #[cfg(feature="0.15")]
+            Self::ChildBuilder{entry} => Some(qt!{#entry.parent_entity()}),
         }}
 
         pub fn has_entity(&self) -> bool {self.get_entity().is_some()}
@@ -97,23 +100,29 @@ use deki::*;
             Self::EntityCommands { entry } 
             | Self::DeferredWorld { entry, entity:_ } 
             => qt!{#entry.commands()},
-            Self::ChildBuilder { entry }
-            => qt!{#entry.commands_mut()},
             Self::Commands { entry, entity:_ } 
             | Self::World { entry, entity:_ } 
             => qt!{#entry},
             Self::EntityWorldMut { entry }
-            => qt!{unsafe{#entry.world_mut()}}
+            => qt!{unsafe{#entry.world_mut()}},
+            Self::ChildBuilder{entry} => {
+                #[cfg(feature="0.16")]
+                qt!{#entry.commands_mut()}
+                #[cfg(feature="0.15")]
+                qt!{#entry}
+            }
         }}
 
         pub fn init_entry(&self) -> TokenStream{ match self {
             Self::EntityCommands { entry } 
             | Self::DeferredWorld { entry, entity:_ } 
             => qt!{let mut world = #entry.commands();},
-            Self::ChildBuilder { entry } 
-            => qt!{let mut world = #entry.commands_mut();},
             Self::EntityWorldMut { entry }
             => qt!{let world = unsafe{#entry.world_mut()};},
+            #[cfg(feature="0.16")]
+            Self::ChildBuilder { entry } => qt!{
+                let mut world = #entry.commands_mut();
+            },
              _ => qt!{} 
         }}
 
@@ -121,8 +130,9 @@ use deki::*;
             Self::EntityCommands { entry:_ } 
             | Self::DeferredWorld { entry:_, entity:_ } 
             | Self::EntityWorldMut { entry:_ } 
-            | Self::ChildBuilder { entry:_ } 
             => qt!{world},
+            #[cfg(feature="0.16")]
+            Self::ChildBuilder { entry:_ } => qt!(world),
             _ => self.get_entry() 
         }}
 
@@ -135,13 +145,19 @@ use deki::*;
         pub fn world_wrap(&self,inner:TokenStream) -> TokenStream {match self {
             Self::Commands{entry:_,entity:_}
             | Self::EntityCommands{entry:_} 
-            | Self::ChildBuilder{entry:_}
             | Self::DeferredWorld {entry:_,entity:_} => { 
                 let world = self.use_entry();
                 qt!{#world.queue(move|world:&mut World|{#inner});}
             },
             Self::World{entry:_,entity:_} | Self::EntityWorldMut{entry:_} => qt!{
                 #inner
+            },
+            Self::ChildBuilder{entry:_} => {
+                let world = self.use_entry();
+                #[cfg(feature="0.16")]
+                qt!{#world.queue(move|world:&mut World|{#inner});}
+                #[cfg(feature="0.15")]
+                qt!{#world.enqueue_command(move|world:&mut World|{#inner});}
             }
         }}
 
@@ -412,8 +428,13 @@ use deki::*;
         let name_tmp = name.to_string().ident();
  
         if let Some(parent) = ancestors.last() {
+            #[cfg(feature="0.16")]
             parenting.extend(qt!{
                 #world_token.#entity_mut(#name_tmp).insert(ChildOf{parent:#parent});
+            });
+            #[cfg(feature="0.15")]
+            parenting.extend(qt!{
+                #world_token.#entity_mut(#name_tmp).set_parent(#parent);
             });
             spawn.extend(qt!(
                 let mut #name = #spawn_token.spawn_empty().id();
@@ -507,12 +528,16 @@ use deki::*;
                         TokenTree::Group(group) if group.delimiter().is_brace() => {
                             let trigger = "trigger".ident_span(span_entity);
                             let let_event = "event".ident_span(span_entity);
+                            #[cfg(feature="0.16")]
+                            let trigger_entity = qt!{trigger.target()};
+                            #[cfg(feature="0.15")]
+                            let trigger_entity = qt!{trigger.entity()};
                             commands.extend(match span_world  { 
                                 None => {
                                     let this = "this".ident_span(span_entity);
                                     qt!(this.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
                                         #[allow(unused_variables)]
-                                        let mut #this = world.entity(trigger.observer());
+                                        let mut #this = world.entity(#trigger_entity);
                                         #[allow(unused_variables)]
                                         let #let_event = trigger.event();
                                         #group
@@ -523,7 +548,7 @@ use deki::*;
                                     let world = "world".ident_span(span_world);
                                     qt!(this.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
                                         #[allow(unused_variables)]
-                                        let #entity = trigger.observer();
+                                        let #entity = #trigger_entity;
                                         #[allow(unused_variables)]
                                         let #let_event = trigger.event().clone();
                                         world.queue(move|#world:&mut World|#group);

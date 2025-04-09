@@ -64,6 +64,7 @@ use syn::LitFloat;
             let defaults = TokenStream::from_iter(self.defaults.keys.iter().map(|s|{
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 match s.as_str() {
+                    #[cfg(feature="0.16")]
                     "BoxShadow" => qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);},
                     _ => qt!{let mut #var = #typ::default();}
                 }
@@ -228,11 +229,17 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,iter.into_vals()) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
+                    #[cfg(feature="0.16")]
                     out!{BoxShadow => Val [[0].#field][#val] [oval.extra]}
+                    #[cfg(feature="0.15")]
+                    out!{BoxShadow => Val [.#field][#val] [oval.extra]}
                 }
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
+                    #[cfg(feature="0.16")]
                     out!{BoxShadow => Color [[0].#field][#color] [extra]}
+                    #[cfg(feature="0.15")]
+                    out!{BoxShadow => Color [.#field][#color] [extra]}
                 }
             }
 
