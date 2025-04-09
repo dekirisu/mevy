@@ -105,6 +105,7 @@ entity!{
 
 # Redirection
 After the initial selection of entities, you can redirect it to entities of a component.
+This expects: `<impl Component>.<path to an impl Iterator<Item=Entity>>` or `<impl Component>.<path to a Some<Entity>!` (mind the '!').
 ```rust
 entity!{
     <world|#Marker>             // select: every Entity with [Marker]
