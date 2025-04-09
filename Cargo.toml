@@ -25,11 +25,11 @@ ui = ["dep:mevy_ui"]
 
 [workspace.dependencies.mevy_core]
 path = "crates/core"
-version = "0.1.0"
+version = "0.1.1"
 
 [workspace.dependencies.mevy_core_syntax]
 path = "crates/core/syntax"
-version = "0.2.2"
+version = "0.2.3"
 
 [workspace.dependencies.mevy_ui]
 path = "crates/ui"
