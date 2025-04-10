@@ -80,10 +80,15 @@ use deki::*;
             | Self::DeferredWorld {entry:_,entity}
             | Self::World {entry:_,entity} 
             => entity.clone(),
-            #[cfg(feature="0.16")]
-            Self::ChildBuilder{entry} => Some(qt!{#entry.target_entity()}),
-            #[cfg(feature="0.15")]
-            Self::ChildBuilder{entry} => Some(qt!{#entry.parent_entity()}),
+            Self::ChildBuilder{entry} => Some({
+                #[cfg(feature="0.16-rc.3")]
+                qt!{#entry.target_entity()}
+                #[cfg(feature="0.15")]
+                qt!{#entry.parent_entity()}
+                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.15"))]
+                compile_error_no_version()
+            }),
         }}
 
         pub fn has_entity(&self) -> bool {self.get_entity().is_some()}
@@ -106,10 +111,13 @@ use deki::*;
             Self::EntityWorldMut { entry }
             => qt!{unsafe{#entry.world_mut()}},
             Self::ChildBuilder{entry} => {
-                #[cfg(feature="0.16")]
+                #[cfg(feature="0.16-rc.3")]
                 qt!{#entry.commands_mut()}
                 #[cfg(feature="0.15")]
                 qt!{#entry}
+                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.15"))]
+                compile_error_no_version()
             }
         }}
 
@@ -119,9 +127,14 @@ use deki::*;
             => qt!{let mut world = #entry.commands();},
             Self::EntityWorldMut { entry }
             => qt!{let world = unsafe{#entry.world_mut()};},
-            #[cfg(feature="0.16")]
-            Self::ChildBuilder { entry } => qt!{
-                let mut world = #entry.commands_mut();
+            Self::ChildBuilder { entry } => {
+                #[cfg(feature="0.16-rc.3")]
+                qt!{let mut world = #entry.commands_mut();}
+                #[cfg(feature="0.15")]
+                qt!{}
+                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.15"))]
+                compile_error_no_version()
             },
              _ => qt!{} 
         }}
@@ -131,8 +144,15 @@ use deki::*;
             | Self::DeferredWorld { entry:_, entity:_ } 
             | Self::EntityWorldMut { entry:_ } 
             => qt!{world},
-            #[cfg(feature="0.16")]
-            Self::ChildBuilder { entry:_ } => qt!(world),
+            Self::ChildBuilder { entry:_ } => {
+                #[cfg(feature="0.16-rc.3")]
+                qt!{world}
+                #[cfg(feature="0.15")]
+                {self.get_entry()}
+                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.15"))]
+                compile_error_no_version()
+            },
             _ => self.get_entry() 
         }}
 
@@ -153,12 +173,16 @@ use deki::*;
                 #inner
             },
             Self::ChildBuilder{entry:_} => {
+                #[allow(unused_variables)]
                 let world = self.use_entry();
-                #[cfg(feature="0.16")]
+                #[cfg(feature="0.16-rc.3")]
                 qt!{#world.queue(move|world:&mut World|{#inner});}
                 #[cfg(feature="0.15")]
                 qt!{#world.enqueue_command(move|world:&mut World|{#inner});}
-            }
+                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.15"))]
+                compile_error_no_version()
+            },
         }}
 
     }
@@ -428,7 +452,7 @@ use deki::*;
         let name_tmp = name.to_string().ident();
  
         if let Some(parent) = ancestors.last() {
-            #[cfg(feature="0.16")]
+            #[cfg(feature="0.16-rc.3")]
             parenting.extend(qt!{
                 #world_token.#entity_mut(#name_tmp).insert(ChildOf{parent:#parent});
             });
@@ -436,6 +460,10 @@ use deki::*;
             parenting.extend(qt!{
                 #world_token.#entity_mut(#name_tmp).set_parent(#parent);
             });
+            #[cfg(not(feature="0.16-rc.3"))]
+            #[cfg(not(feature="0.15"))]
+            parenting.extend(compile_error_no_version());
+
             spawn.extend(qt!(
                 let mut #name = #spawn_token.spawn_empty().id();
             ))
@@ -528,10 +556,15 @@ use deki::*;
                         TokenTree::Group(group) if group.delimiter().is_brace() => {
                             let trigger = "trigger".ident_span(span_entity);
                             let let_event = "event".ident_span(span_entity);
-                            #[cfg(feature="0.16")]
+                            
+                            #[cfg(feature="0.16-rc.3")]
                             let trigger_entity = qt!{trigger.target()};
                             #[cfg(feature="0.15")]
                             let trigger_entity = qt!{trigger.entity()};
+                            #[cfg(not(feature="0.15"))]
+                            #[cfg(not(feature="0.16-rc.3"))]
+                            let trigger_entity = compile_error_no_version();
+
                             commands.extend(match span_world  { 
                                 None => {
                                     let this = "this".ident_span(span_entity);
@@ -573,6 +606,11 @@ use deki::*;
                 #commands
             ));
         }
+    }
+
+
+    fn compile_error_no_version() -> TokenStream {
+        qt!{compile_error!{"Mevy: Missing bevy version!: Specify it in Cargo.toml! e.g. feature=[\"0.15\"])"}}
     }
 
 // EOF \\

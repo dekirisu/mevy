@@ -64,8 +64,15 @@ use syn::LitFloat;
             let defaults = TokenStream::from_iter(self.defaults.keys.iter().map(|s|{
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 match s.as_str() {
-                    #[cfg(feature="0.16")]
-                    "BoxShadow" => qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);},
+                    "BoxShadow" => {
+                        #[cfg(feature="0.16-rc.3")]
+                        qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);}
+                        #[cfg(feature="0.15")]
+                        qt!{let mut #var = #typ::default();}
+                        #[cfg(not(feature="0.15"))]
+                        #[cfg(not(feature="0.16-rc.3"))]
+                        compile_error_no_version()
+                    }
                     _ => qt!{let mut #var = #typ::default();}
                 }
             }));
@@ -229,17 +236,27 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,iter.into_vals()) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
-                    #[cfg(feature="0.16")]
+                    #[cfg(feature="0.16-rc.3")]
                     out!{BoxShadow => Val [[0].#field][#val] [oval.extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Val [.#field][#val] [oval.extra]}
+                    #[cfg(not(feature="0.16-rc.3"))]
+                    #[cfg(not(feature="0.15"))]{
+                        let err = compile_error_no_version();
+                        out!{BoxShadow => Val [;][#err] [None]}
+                    }
                 }
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
-                    #[cfg(feature="0.16")]
+                    #[cfg(feature="0.16-rc.3")]
                     out!{BoxShadow => Color [[0].#field][#color] [extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Color [.#field][#color] [extra]}
+                    #[cfg(not(feature="0.16-rc.3"))]
+                    #[cfg(not(feature="0.15"))]{
+                        let err = compile_error_no_version();
+                        out!{BoxShadow => Color [;][#err] [None]}
+                    }
                 }
             }
 
@@ -699,6 +716,10 @@ use syn::LitFloat;
             else {UiToken::new(None,Span::call_site(),None)}
         }
 
+    }
+
+    fn compile_error_no_version() -> TokenStream {
+        qt!{compile_error!{"Mevy: Missing bevy version!: Specify it in Cargo.toml! e.g. feature=[\"0.15\"])"}}
     }
 
 // EOF \\

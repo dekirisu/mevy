@@ -20,6 +20,6 @@ workspace = true
 features = ["proc"]
 
 [features]
-default = ["0.16"]
+default = []
 "0.15" = ["mevy_ecs_syntax/0.15"]
-"0.16" = ["mevy_ecs_syntax/0.16"]
+"0.16-rc.3" = ["mevy_ecs_syntax/0.16-rc.3"]

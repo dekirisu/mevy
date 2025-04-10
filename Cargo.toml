@@ -19,10 +19,10 @@ mevy_ui.optional = true
 
 
 [features]
-default = ["ui","0.16"]
+default = ["ui"]
 ui = ["dep:mevy_ui"]
 "0.15" = ["mevy_ecs/0.15","mevy_ui?/0.15"]
-"0.16" = ["mevy_ecs/0.16","mevy_ui?/0.16"]
+"0.16-rc.3" = ["mevy_ecs/0.16-rc.3","mevy_ui?/0.16-rc.3"]
 
 
 [workspace.dependencies.mevy_core]
@@ -73,3 +73,7 @@ features = [
     "bevy_picking",
     "x11"
 ]
+
+[dev-dependencies.mevy]
+path = ""
+features = ["0.16-rc.3"]
