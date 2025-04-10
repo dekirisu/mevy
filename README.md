@@ -22,14 +22,11 @@ A **growing** set of **m**acros which add some witchcraft into b**evy**, current
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
-# bevy 0.16 w/ mevy_ui
-mevy = "0.2"
- 
-# bevy 0.16 w/o mevy_ui
-mevy = {version="0.2",default-features=false,features=["0.16"]}
+# bevy 0.16.0-rc.3
+mevy = {version="0.2",features=["0.16-rc.3"]}
 
-# bevy 0.15 w/ mevy_ui
-mevy = {version="0.2",default-features=false,features=["0.15","ui"]}
+# bevy 0.15
+mevy = {version="0.2",features=["0.15"]}
 ```
 
 Then just `use` all of it:
