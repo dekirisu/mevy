@@ -10,6 +10,15 @@
 > [!NOTE]
 > This crate is part of [mevy](https://github.com/dekirisu/mevy) (tl;dr: more neat macros) so take a look! 🦆
 
+## Setup
+Multiple bevy versions are supported and managed by features:
+```toml
+# bevy 0.16.0-rc.3
+mevy_ui = {version="0.2",features=["0.16-rc.3"]}
+
+# bevy 0.15
+mevy_ui = {version="0.2",features=["0.15"]}
+```
 
 ## ⭐ The Star of the Crate: CSS-like Notation
 The macro `ui!()` has multiple modes, that are invoked by (1.) the type of delimiters and (2.) if a name is provided:
