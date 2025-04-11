@@ -81,11 +81,11 @@ use deki::*;
             | Self::World {entry:_,entity} 
             => entity.clone(),
             Self::ChildBuilder{entry} => Some({
-                #[cfg(feature="0.16-rc.3")]
+                #[cfg(feature="0.16-rc")]
                 qt!{#entry.target_entity()}
                 #[cfg(feature="0.15")]
                 qt!{#entry.parent_entity()}
-                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.16-rc"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
             }),
@@ -111,11 +111,11 @@ use deki::*;
             Self::EntityWorldMut { entry }
             => qt!{unsafe{#entry.world_mut()}},
             Self::ChildBuilder{entry} => {
-                #[cfg(feature="0.16-rc.3")]
+                #[cfg(feature="0.16-rc")]
                 qt!{#entry.commands_mut()}
                 #[cfg(feature="0.15")]
                 qt!{#entry}
-                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.16-rc"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
             }
@@ -128,11 +128,11 @@ use deki::*;
             Self::EntityWorldMut { entry }
             => qt!{let world = unsafe{#entry.world_mut()};},
             Self::ChildBuilder { entry } => {
-                #[cfg(feature="0.16-rc.3")]
+                #[cfg(feature="0.16-rc")]
                 qt!{let mut world = #entry.commands_mut();}
                 #[cfg(feature="0.15")]
                 qt!{}
-                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.16-rc"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
             },
@@ -145,11 +145,11 @@ use deki::*;
             | Self::EntityWorldMut { entry:_ } 
             => qt!{world},
             Self::ChildBuilder { entry:_ } => {
-                #[cfg(feature="0.16-rc.3")]
+                #[cfg(feature="0.16-rc")]
                 qt!{world}
                 #[cfg(feature="0.15")]
                 {self.get_entry()}
-                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.16-rc"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
             },
@@ -175,11 +175,11 @@ use deki::*;
             Self::ChildBuilder{entry:_} => {
                 #[allow(unused_variables)]
                 let world = self.use_entry();
-                #[cfg(feature="0.16-rc.3")]
+                #[cfg(feature="0.16-rc")]
                 qt!{#world.queue(move|world:&mut World|{#inner});}
                 #[cfg(feature="0.15")]
                 qt!{#world.enqueue_command(move|world:&mut World|{#inner});}
-                #[cfg(not(feature="0.16-rc.3"))]
+                #[cfg(not(feature="0.16-rc"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
             },
@@ -452,15 +452,15 @@ use deki::*;
         let name_tmp = name.to_string().ident();
  
         if let Some(parent) = ancestors.last() {
-            #[cfg(feature="0.16-rc.3")]
+            #[cfg(feature="0.16-rc")]
             parenting.extend(qt!{
-                #world_token.#entity_mut(#name_tmp).insert(ChildOf{parent:#parent});
+                #world_token.#entity_mut(#name_tmp).insert(ChildOf(#parent));
             });
             #[cfg(feature="0.15")]
             parenting.extend(qt!{
                 #world_token.#entity_mut(#name_tmp).set_parent(#parent);
             });
-            #[cfg(not(feature="0.16-rc.3"))]
+            #[cfg(not(feature="0.16-rc"))]
             #[cfg(not(feature="0.15"))]
             parenting.extend(compile_error_no_version());
 
@@ -557,12 +557,12 @@ use deki::*;
                             let trigger = "trigger".ident_span(span_entity);
                             let let_event = "event".ident_span(span_entity);
                             
-                            #[cfg(feature="0.16-rc.3")]
+                            #[cfg(feature="0.16-rc")]
                             let trigger_entity = qt!{trigger.target()};
                             #[cfg(feature="0.15")]
                             let trigger_entity = qt!{trigger.entity()};
                             #[cfg(not(feature="0.15"))]
-                            #[cfg(not(feature="0.16-rc.3"))]
+                            #[cfg(not(feature="0.16-rc"))]
                             let trigger_entity = compile_error_no_version();
 
                             commands.extend(match span_world  { 
