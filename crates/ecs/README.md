@@ -13,8 +13,8 @@ This crate is part of [mevy](https://github.com/dekirisu/mevy) (tl;dr: more neat
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
-# bevy 0.16.0-rc.3
-mevy_ecs = {version="0.2",features=["0.16-rc.3"]}
+# bevy 0.16.0-rc.4
+mevy_ecs = {version="0.2",features=["0.16-rc"]}
 
 # bevy 0.15
 mevy_ecs = {version="0.2",features=["0.15"]}
