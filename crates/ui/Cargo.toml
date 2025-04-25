@@ -1,6 +1,6 @@
 [package]
 name = "mevy_ui"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 
 authors = ["Dekirisu <dekirisu@gmail.com>"]
@@ -23,3 +23,4 @@ features = ["proc"]
 default = []
 "0.15" = ["mevy_ui_syntax/0.15"]
 "0.16-rc" = ["mevy_ui_syntax/0.16-rc"]
+"0.16" = ["mevy_ui_syntax/0.16"]

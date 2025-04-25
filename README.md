@@ -22,8 +22,8 @@ A **growing** set of **m**acros which add some witchcraft into b**evy**, current
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
-# bevy 0.16.0-rc.4
-mevy = {version="0.2",features=["0.16-rc"]}
+# bevy 0.16
+mevy = {version="0.2",features=["0.16"]}
 
 # bevy 0.15
 mevy = {version="0.2",features=["0.15"]}

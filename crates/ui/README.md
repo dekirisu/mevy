@@ -13,8 +13,8 @@
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
-# bevy 0.16.0-rc.4
-mevy_ui = {version="0.2",features=["0.16-rc"]}
+# bevy 0.16
+mevy_ui = {version="0.2",features=["0.16"]}
 
 # bevy 0.15
 mevy_ui = {version="0.2",features=["0.15"]}

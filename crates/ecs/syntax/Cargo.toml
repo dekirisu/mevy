@@ -1,6 +1,6 @@
 [package]
 name = "mevy_ecs_syntax"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 
 authors = ["Dekirisu <dekirisu@gmail.com>"]
@@ -19,4 +19,5 @@ features = ["proc"]
 [features]
 default = []
 "0.15" = []
-"0.16-rc" = []
+"0.16" = []
+"0.16-rc" = ["0.16"]

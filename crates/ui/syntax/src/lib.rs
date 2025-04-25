@@ -65,12 +65,12 @@ use syn::LitFloat;
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 match s.as_str() {
                     "BoxShadow" => {
-                        #[cfg(feature="0.16-rc")]
+                        #[cfg(feature="0.16")]
                         qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);}
                         #[cfg(feature="0.15")]
                         qt!{let mut #var = #typ::default();}
                         #[cfg(not(feature="0.15"))]
-                        #[cfg(not(feature="0.16-rc"))]
+                        #[cfg(not(feature="0.16"))]
                         compile_error_no_version()
                     }
                     _ => qt!{let mut #var = #typ::default();}
@@ -236,11 +236,11 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,iter.into_vals()) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
-                    #[cfg(feature="0.16-rc")]
+                    #[cfg(feature="0.16")]
                     out!{BoxShadow => Val [[0].#field][#val] [oval.extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Val [.#field][#val] [oval.extra]}
-                    #[cfg(not(feature="0.16-rc"))]
+                    #[cfg(not(feature="0.16"))]
                     #[cfg(not(feature="0.15"))]{
                         let err = compile_error_no_version();
                         out!{BoxShadow => Val [;][#err] [None]}
@@ -248,11 +248,11 @@ use syn::LitFloat;
                 }
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
-                    #[cfg(feature="0.16-rc")]
+                    #[cfg(feature="0.16")]
                     out!{BoxShadow => Color [[0].#field][#color] [extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Color [.#field][#color] [extra]}
-                    #[cfg(not(feature="0.16-rc"))]
+                    #[cfg(not(feature="0.16"))]
                     #[cfg(not(feature="0.15"))]{
                         let err = compile_error_no_version();
                         out!{BoxShadow => Color [;][#err] [None]}
