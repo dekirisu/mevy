@@ -1,3 +1,4 @@
+use deki::syn::LitInt;
 pub use deki::*;
 pub use mevy_core_syntax::*;
 use std::{f32::consts::PI, iter::zip};
@@ -6,8 +7,42 @@ use syn::LitFloat;
 // CSS -> Bundle \\
 
     pub fn bundle(iter:PeekIter,after:Option<TokenTree>) -> TokenStream {
-        UiPrep::from_iter(iter).get_bundle(after)
+        UiPrep::from_iter(iter,false,|a,_|a.is_punct(';')).get_bundle(after)
     }
+
+    pub fn bundle_slim(iter:PeekIter,after:Option<TokenTree>) -> TokenStream {
+        UiPrep::from_iter(iter,true,|a,b|{
+            let a_punct = a.is_punct(':') || a.is_punct('#') || a.is_punct('$');
+            !a_punct && b.map(|b|b.is_any_ident()).unwrap_or_default()
+        }).get_bundle(after)
+    }
+
+    #[ext(pub trait TreeIterExt2)]
+    impl PeekIter {
+
+        /// splits Tokens into multiple [TokenStream]s  by a char delimiter. 
+        /// - doesn't include empty parts.
+        fn split_by_filter(mut self,push_first:bool,func:fn(&TokenTree,Option<&TokenTree>) -> bool) -> Vec<TokenStream> {
+            let mut out = vec![];
+            let mut curr = vec![];
+            while let Some(tree) = self.next() {
+                if push_first {curr.push(tree.clone());}
+                if func(&tree,self.peek()) {
+                    if !curr.is_empty(){
+                        out.push(TokenStream::from_iter(std::mem::take(&mut curr)));
+                    }
+                    continue
+                }
+                if !push_first {curr.push(tree);}
+            }
+            if !curr.is_empty(){
+                out.push(TokenStream::from_iter(curr));
+            }
+            out
+        }
+    }
+
+
 
     #[derive(Default)]
     pub struct UiPrep {
@@ -18,14 +53,22 @@ use syn::LitFloat;
     }
 
     impl UiPrep {
-        pub fn from_stream(stream:TokenStream) -> Self {
-            Self::from_iter(stream.peek_iter()) 
+        pub fn from_stream(stream:TokenStream,push_first:bool,func:fn(&TokenTree,Option<&TokenTree>)->bool) -> Self {
+            Self::from_iter(stream.peek_iter(),push_first,func) 
         }
-        pub fn from_iter(iter:PeekIter) -> Self {
+        pub fn from_iter(mut iter:PeekIter,push_first:bool,func:fn(&TokenTree,Option<&TokenTree>)->bool) -> Self {
             let mut out = Self::default();
-            for stream in iter.split_punct(';') {
+
+            if let Some(TokenTree::Literal(_)) = iter.peek() {
+                kill!{a = iter.next()}
+                let var = "txt".ident();
+                out.assign.extend(qt!{let #var = Text::new(#a);});
+                *out.variables.entry(var.to_string()) = true;
+            }
+
+            for stream in iter.split_by_filter(push_first,func) {
                 let mut iter = stream.peek_iter();
-                let field = iter.next().unwrap().risk_ident();
+                let field = iter.next().unwrap().unwrap_ident();
                 let yuim = ui_style_sheet(field.clone().into(),&mut iter);
 
                 if yuim.is_empty() {
@@ -112,9 +155,68 @@ use syn::LitFloat;
 
     }
 
+//\\
+
+    #[ext(pub trait Identasdf)]
+    impl TokenTree {
+        fn resolve_alias(self) -> Ident {
+            macro_rules! masch {($($main:literal: $($alias:literal)*;)*)=>{match self.to_string().as_str(){
+                $($($alias)|* => $main.ident_span(self.span()),)*
+                _ => if let TokenTree::Ident(id) = self {id} else {panic!{"waduhek?"}}
+            }}}
+            masch!{
+
+                // margin \|
+                "margin": "m";
+                "margin_x": "mx";
+                "margin_y": "my";
+                "margin_left": "ml";
+                "margin_right": "mr";
+                "margin_top": "mt";
+                "margin_bottom": "mb";
+
+                // padding \|
+                "padding": "p";
+                "padding_x": "px";
+                "padding_y": "py";
+                "padding_left": "pl";
+                "padding_right": "pr";
+                "padding_top": "pt";
+                "padding_bottom": "pb";
+
+                //  \|
+                "width": "w";
+                "height": "h";
+                "top": "t";
+                "left": "l";
+                "right": "r";
+                "bottom": "b";
+
+                // \|
+                "line_height": "leading";
+                "font_size": "text_size";
+                "box_shadow": "shadow";
+                "flex_direction": "flex";
+                "min_width": "min_w";
+                "min_height": "min_h";
+                "column_gap": "gap_x";
+                "row_gap": "gap_y";
+                "border_radius": "rounded" "round";
+                "font_color": "color";
+                "background_color": "background" "bg";
+                "z_index": "zindex" "z";
+                "z_global": "zg";
+                "relative_cursor_position": "cursor_position" "cursor_pos";
+                "focus_policy": "focus";
+                "scroll_position": "scroll";
+
+            }
+        }
+    }
+
 // CSS-Like \\
 
-    macro_rules! qar {($([$($tt:tt)*])*)=>{[$(qt!($($tt)*)),*]}}
+    macro_rules! qar {($([$($tt:tt)*])*)=>{vec![$(qt!($($tt)*)),*]}}
 
     pub struct UiEntry {
         /// e.g: type of [Self::value]
@@ -132,7 +234,7 @@ use syn::LitFloat;
     type UiMap = StackMap<Str,Vec<UiEntry>>; 
 
     pub fn ui_style_sheet(field:TokenTree,iter:&mut PeekIter) -> UiMap {
-        iter.skip_puncts("#-");
+        iter.skip_puncts("#-$");
         let mut map = UiMap::new();
 
         macro_rules! out {
@@ -151,7 +253,38 @@ use syn::LitFloat;
             }}
         }
 
+        let field = field.resolve_alias();
         match field.to_string().as_str() {
+
+// Shortcuts \|
+
+            "absolute" => {
+                let posi = qts![field.span()=>PositionType::Absolute];
+                out!{Node => _ [.position_type][#posi] [None]}
+            }
+
+            "relative" => {
+                let posi = qts![field.span()=>PositionType::Relative];
+                out!{Node => _ [.position_type][#posi] [None]}
+            }
+
+            "hidden" => {
+                let posi = qts![field.span()=>Visibility::Hidden];
+                out!{Visibility => _ [][#posi] [None]}
+            }
+
+           "visible" => {
+                let posi = qts![field.span()=>Visibility::Visible];
+                out!{Visibility => _ [][#posi] [None]}
+            }
+
+           "inherit" => {
+                let posi = qts![field.span()=>Visibility::Inherit];
+                out!{Visibility => _ [][#posi] [None]}
+            }
+
+
+// \|
 
             "scale" => {
                 let x = iter.next();
@@ -182,7 +315,7 @@ use syn::LitFloat;
                 let mut vec = iter.collect::<Vec<_>>();
                 let mut extra = None;
                 if let Some(TokenTree::Group(grp)) = vec.last() {
-                    if grp.delimiter().is_bracked(){
+                    if grp.delimiter().is_bracket(){
                         extra = Some(grp.stream()); 
                         vec.pop();
                     }
@@ -191,7 +324,7 @@ use syn::LitFloat;
                 out!{Transform => Quat [.rotation][Quat::from_rotation_z(#token)] [extra]}
             }
 
-            "color"|"font_color" => match iter.try_into_color().prepare() {
+            "font_color" => match iter.try_into_color().prepare() {
                 Some((color,_,extra)) => out!{TextColor => Color [.0][#color] [extra]},
             _=>()}
 
@@ -200,7 +333,7 @@ use syn::LitFloat;
                 out!{TextFont => f32 [.#field][#val as f32] [None]}
             }
 
-            "background"|"background_color" => match iter.try_into_color().prepare() {
+            "background_color" => match iter.try_into_color().prepare() {
                 Some((color,_,extra)) => out!{BackgroundColor => Color [.0][#color] [extra]},
             _=>()}
 
@@ -228,6 +361,21 @@ use syn::LitFloat;
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
                     out!{Outline => Color [.#field][#color] [extra]}
+                }
+            }
+
+            "text_shadow" => {
+                if let Some((x,_)) = iter.try_number(){
+                    let extra = iter.try_extra();
+                    out!{TextShadow => f32 [.offset.x][#x as f32] [extra]}
+                }
+                if let Some((y,_)) = iter.try_number(){
+                    let extra = iter.try_extra();
+                    out!{TextShadow => f32 [.offset.y][#y as f32] [extra]}
+                }
+                if let Some((color,span,extra)) = iter.try_into_color().prepare() {
+                    let name = "color".ident_span(span);
+                    out!{TextShadow => Color [.#name][#color][extra]}
                 }
             }
 
@@ -260,35 +408,34 @@ use syn::LitFloat;
                 }
             }
 
-            "z_index"|"zindex" => {
-                let pre = match iter.peek_punct() {
-                    '-' => {iter.next();qt!(-)},
-                    _ => qt!()
+            "z_global" => {
+                exit!{(num,_l) = iter.try_number()}
+                let name = "GlobalZIndex";
+                out!{>name => "_" [.0][#num] [None]}
+            }
+
+            "z_index" => {
+                exit!{(num,lit) = iter.try_number()}
+                let name = match lit.suffix() {
+                    "g" => "GlobalZIndex",
+                    _ => "ZIndex"
                 };
-                exit!{val = iter.next()}
-                exit!{if !val.is_numeric()}
-                let name = match iter.next() {
-                    Some(tok) => match &tok.to_string()[..1] {
-                        "g" => "GlobalZIndex",
-                        _ => "ZIndex"
-                    }_ => "ZIndex"
-                };
-                out!{>name => "_" [.0][#pre #val] [None]}
+                out!{>name => "_" [.0][#num] [None]}
             }
 
             "interaction" => {map.entry("Interaction");}
 
-            "relative_cursor_position"|"cursor_position"|"cursor_pos" => {
+            "relative_cursor_position" => {
                 map.entry("RelativeCursorPosition");
             }
 
-            "focus"|"focus_policy" => {
+            "focus_policy" => {
                 let var = iter.next().unwrap_or("Pass".ident().into());
-                let var = var.risk_ident().to_case(Case::Pascal);
+                let var = var.unwrap_ident().to_case(Case::Pascal);
                 out!{FocusPolicy => _ [][FocusPolicy::#var] [None]}
             }
 
-            "scroll_position"|"scroll" => {
+            "scroll_position" => {
                 let vals = iter.into_vals();
                 if vals.is_empty(){
                     map.entry("ScrollPosition");
@@ -302,7 +449,58 @@ use syn::LitFloat;
                 }
             }
 
+// \\
+
+            "line_height" => {
+                kill!{val = iter.next()}
+                out!{TextFont => _ [.line_height][bevy::text::LineHeight::RelativeToFont(#val as f32)] [None]}
+            }
+
+            "justify_text" => {
+                let var = iter.next().unwrap_or("Left".ident().into());
+                let var = var.unwrap_ident().to_case(Case::Pascal);
+                out!{TextLayout => _ [.justify][JustifyText::#var] [None]}
+            }
+
+            "line_break" => {
+                let var = iter.next().unwrap_or("WordBoundary".ident().into());
+                let var = var.unwrap_ident().to_case(Case::Pascal);
+                out!{TextLayout => _ [.linebreak][LineBreak::#var] [None]}
+            }
+
+            "text" => match iter.peek().unwrap().clone() {
+                TokenTree::Literal(val) => {
+                    iter.next();
+                    out!{TextFont => f32 [.font_size][#val as f32] [None]}
+                }
+                _ => {
+                    let var = iter.next().unwrap_or("WordBoundary".ident().into());
+                    let var = var.unwrap_ident().to_case(Case::Pascal);
+                    match var.to_string().as_str() {
+                        "Left"|"Center"|"Right"|"Justified"
+                            => out!{TextLayout => _ [.justify][JustifyText::#var] [None]},
+                        _   => out!{TextLayout => _ [.linebreak][LineBreak::#var] [None]}
+                    }
+                }
+            }
+
+
+
 // Custom Groups \\
+
+            "xy"|"x"|"y" => {
+                let vals = iter.into_rect_like(false);
+                let fields = match field.to_string().as_str() {
+                    "xy" => qar!([top][right][bottom][left]),
+                    "x" => qar!([right][left]),
+                    _   => qar!([top][bottom]),
+                };
+                for (field2,oval) in zip(fields,vals) {
+                    next!{val = oval.main}
+                    let field2 = field2.with_span(oval.span);
+                    out!{Node => Val [.#field2] [#val] [oval.extra]}
+                }
+            }
 
             "size" => {
                 let fields = qar!([width][height]);
@@ -324,8 +522,8 @@ use syn::LitFloat;
 
             "position" => {
                 let field = TokenTree::Ident("position_type".ident_span(field.span()));
-                let enu = field.clone().risk_ident().to_case(Case::Pascal);
-                kill!{val = iter.next(),risk_ident().to_case(Case::Pascal)}
+                let enu = field.clone().unwrap_ident().to_case(Case::Pascal);
+                kill!{val = iter.next(),unwrap_ident().to_case(Case::Pascal)}
                 out!{Node => _ [.#field][#enu::#val] [None]}
             }
 
@@ -365,12 +563,12 @@ use syn::LitFloat;
                 match vecy.len() {
                     0 => out!{Node => _ [.#field][OverflowClipMargin::DEFAULT] [None]},
                     1 => {
-                        kill!{vbox = vecy.pop(),risk_ident().to_case(Case::Pascal)}
+                        kill!{vbox = vecy.pop(),unwrap_ident().to_case(Case::Pascal)}
                         out!{Node => _ [.#field.visual_box][OverflowClipBox::#vbox] [None]}
                     }
                     _ => {
                         kill!{marg = vecy.pop()}
-                        kill!{vbox = vecy.pop(),risk_ident().to_case(Case::Pascal)}
+                        kill!{vbox = vecy.pop(),unwrap_ident().to_case(Case::Pascal)}
                         out!{Node => _ [.#field.visual_box][OverflowClipBox::#vbox] [None]}
                         out!{Node => f32 [.#field.margin][#marg as f32] [None]}
                     }
@@ -378,7 +576,7 @@ use syn::LitFloat;
             }
 
             "overflow" => {
-                let mut vecy = iter.map(|p|p.risk_ident().to_case(Case::Pascal)).collect::<Vec<_>>();
+                let mut vecy = iter.map(|p|p.unwrap_ident().to_case(Case::Pascal)).collect::<Vec<_>>();
                 match vecy.len(){
                     0 => out!{Node => _ [.#field][Overflow::DEFAULT] [None]},
                     1 => {
@@ -397,8 +595,8 @@ use syn::LitFloat;
 
             "display"|"position_type"|"align_items"|"justify_items"|"align_self"|"justify_self"|
             "align_content"|"justify_content"|"flex_direction"|"flex_wrap"|"grid_auto_flow" => {
-                let enu = field.clone().risk_ident().to_case(Case::Pascal);
-                kill!{val = iter.next(),risk_ident().to_case(Case::Pascal)}
+                let enu = field.clone().to_case(Case::Pascal);
+                kill!{val = iter.next(),unwrap_ident().to_case(Case::Pascal)}
                 out!{Node => _ [.#field][#enu::#val] [None]}
             }
 
@@ -435,9 +633,29 @@ use syn::LitFloat;
                 }
             }
 
+            "margin_x"|"margin_y"|"margin_left"|"margin_right"|"margin_top"|"margin_bottom"
+            |"padding_x"|"padding_y"|"padding_left"|"padding_right"|"padding_top"|"padding_bottom" => {
+                let (field,sub) = field.to_string().split_once("_").map(|a|(a.0.ident_span(field.span()),a.1.to_string())).unwrap();
+                let oval = iter.into_val();
+                let fields = match sub.as_str() {
+                    "x" => qar!([right][left]),
+                    "y" => qar!([top][bottom]),
+                    "left" => qar!([left]),
+                    "right" => qar!([right]),
+                    "top" => qar!([top]),
+                    "bottom" => qar!([bottom]),
+                    _ => todo!{}
+                };
+                for field2 in fields {
+                    next!{val = oval.main.clone()}
+                    let field2 = field2.with_span(oval.span);
+                    out!{Node => Val [.#field.#field2] [#val] [oval.extra.clone()]}
+                }
+            }
+
             "left"|"right"|"top"|"bottom"|"width"|"height"|
             "min_width"|"min_height"|"max_width"|"max_height"|
-            "flex_basis"|"row_gap"|"column_gap" 
+            "flex_basis"|"row_gap"|"column_gap"
             => if let UiToken{main:Some(val),span:_,extra} = iter.into_val() {
                 out!{Node => Val [.#field][#val] [extra]}
             }
@@ -520,6 +738,19 @@ use syn::LitFloat;
             self.try_into_val().unwrap_or(UiToken::val())
         }
 
+        fn try_number(&mut self) -> Option<(TokenStream,LitInt)> {
+             let pre = match self.peek_punct() {
+                '-' => {self.next();qt!(-)},
+                '+' => {self.next();qt!()},
+                _ => qt!()
+            };
+            exit!{val = self.next()}
+            exit!{if !val.is_numeric()}
+            let lit: LitInt = val.clone().unwrap_literal().into();
+            exit!{num = lit.base10_parse::<i32>()}
+            Some((qt![#pre #num],lit))
+        }
+
         fn try_extra(&mut self) -> Option<TokenStream> {
             exit!{*Some(TokenTree::Group(grp)) = self.peek()}
             let out = Some(grp.stream());
@@ -537,7 +768,11 @@ use syn::LitFloat;
             }
             Some(match self.next_valvar() {
                 Step::Base((_pct,lit)) => {
-                    let var = qts!{lit.span()=>Px(#lit)};
+                    let lit: LitFloat = lit.clone().into();
+                    kill!{num = lit.base10_parse::<f32>()}
+                    let sign = !_pct.map(|a|a.as_char()=='-').unwrap_or_default();
+                    let num = if sign {num} else {-num};
+                    let var = qts!{lit.span()=>Px(#num)};
                     UiToken::new(
                         Some(qt!{Val::#var}),
                         lit.span(),self.try_extra()
@@ -548,7 +783,17 @@ use syn::LitFloat;
                     var.span(),
                     self.try_extra()
                 ),
-                _ => exit!{}
+                _ => {
+                    exit!{var = self.peek()}
+                    match var.clone() {
+                        TokenTree::Punct(p) if p.as_char()=='$' => {
+                            self.next();
+                            exit!{var = self.next()}
+                            UiToken::new(Some(qt![Val::Px(#var)]),var.span(),self.try_extra())
+                        }
+                        _ => return None
+                    }
+                }
             })
         }
 
@@ -688,7 +933,7 @@ use syn::LitFloat;
             };
             let mut spon = self.skip_puncts("#-");
             spon.insert(0,rep);
-            let track = if !self.peek().is_ident(){
+            let track = if !self.peek().is_any_ident(){
                 self.try_into_grid_track_base(qt!{#repe,})
             } else {
                 self.try_into_grid_track_base(repe)
@@ -709,7 +954,7 @@ use syn::LitFloat;
                 if css.is_valid_keep("c"){
                     UiToken::new(None,css.span(),self.try_extra())
                 } else {
-                    let css = css.risk_ident().to_case(Case::UpperSnake);
+                    let css = css.unwrap_ident().to_case(Case::UpperSnake);
                     UiToken::new(Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span(),self.try_extra())
                 }
             }
