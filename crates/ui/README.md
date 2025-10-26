@@ -23,6 +23,15 @@ mevy_ui = {version="0.2",features=["0.15"]}
 ## ⭐ The Star of the Crate: CSS-like Notation
 The macro `ui!()` has multiple modes, that are invoked by (1.) the type of delimiters and (2.) if a name is provided:
 
+### 'Slim' Tuple Inline Mode
+Short syntax, inspired by TailwindCSS!
+```rust
+c.spawn(ui!(
+    w:100 h:100 radius:6 bg:#fff border:5#f00 
+    shadow:10%+10%+3px+8px#fa4
+)?));
+```
+
 ### Tuple Inline Mode
 `ui!((..))` (inner round braces) will return a tuple of **mentioned components** only. See [this example](../../examples/ui_bundle.rs).
 ```rust
@@ -148,40 +157,104 @@ Here's a list of all available out of the box fields, `Val` order same as in bev
 - enum variants can also be written in snake case
 ```rust
 ui!((
-  // Node Fields
-  left: 1px;
-  right: 1px;
-  top: 1px;
-  bottom: 1px;
-  width: 1px;
-  height: 1px;
-  min_width: 1px;
-  max_width: 1px;
-  min_height: 1px;
-  max_height: 1px;
-  flex_basis: 1px;
-  row_gap: 1px;
-  column_gap: 1px;
-  margin: 1px 1px 1px 1px; // see 'Edge Selection'
-  padding: 1px 1px 1px 1px; // see 'Edge Selection'
-  border: 1px 1px 1px 1px #ff0000; // see 'Edge Selection'
-  flex_grow: 1;
-  flex_shrink: 1;
-  aspect_ratio: 1;
-  display: flex|grid|block|none;
+
+  // Position Type
   position_type: absolute|relative;
-  justify_items: default|start|end|center|baseline|stretch;
-  align_items: ^|flex_start|flex_end;
+  absolute; // shortcut
+  relative; // ^
+
+  // Visibility
+  hidden; 
+  visible;
+  inherit;
+
+  // Transform - be aware how it affects UI!
+  scale: 1.0 1.2; // x y
+  scale: 1.0; // x & y
+  rotation: 1.41; // radian
+  rotation: 45deg; // degree
+
+  // Positions
+  l|left: 1px;
+  r|right: 1px;
+  t|top: 1px;
+  b|bottom: 1px;
+  x: 1px; // left & right
+  y: 1px; // top & bottom  
+  xy: 1px; // x & y
+  z|z_index: 10;
+  zg|z_global: 10;
+
+  // Size
+  w|width: 1px;
+  h|height: 1px;
+  size: 1px 1px; // width height
+  min_w|min_width: 1px;
+  min_h|min_height: 1px;
+  max_w|max_width: 1px;
+  max_h|max_height: 1px;
+  aspect_ratio: 1;
+ 
+  // Margin
+  m|margin: 1px 1px 1px 1px; // see 'Edge Selection'
+  mt|margin_top: 1px;
+  mb|margin_bottom: 1px;
+  ml|margin_left: 1px;
+  mr|margin_right: 1px;
+  mx|margin_x: 1px; // ml & mr
+  my|margin_y: 1px; // mt & mb
+ 
+  // Padding
+  p|padding: 1px 1px 1px 1px; // see 'Edge Selection'
+  pt|padding_top: 1px;
+  pb|padding_bottom: 1px;
+  pl|padding_left: 1px;
+  pr|padding_right: 1px;
+  px|padding_x: 1px; // pl & pr
+  py|padding_y: 1px; // pt & pb
+
+  // Box Styling
+  bg|background: red;
+  shadow|box_shadow: 1px 1px 1px 1px #ff0000;
+  border: 1px 1px 1px 1px #ff0000; // see 'Edge Selection'
+  border_color: #ff0000;
+  outline: 1px 1px #ff0000;
+  radius|border_radius: 1px 1%;
+
+  // Text Styling
+  text|text_size|font_size: 20;
+  text|justify_text: left|center|right|justified;
+  text|line_break: word_boundary|any_character|word_or_character|no_wrap;
+  leading|line_height: 1.2;
+  color|font_color: #ff0000;
+  text_shadow: 2 2 #000; // x y color
+
+  // Align Self
   justify_self: auto|start|end|center|baseline|stretch;
   align_self: ^|flex_start|flex_end;
+
+  // Handle Children
+  display: flex|grid|block|none;
+  justify_items: default|start|end|center|baseline|stretch;
+  align_items: ^|flex_start|flex_end;
   justify_content: default|start|end|flex_start|flex_end|center|stretch|space_between|space_evenly|space_around;
   align_content: ^;
-  flex_direction: row|column|row_reverse|column_reverse;
-  flex_wrap: no_wrap|wrap|wrap_reverse;
-  grid_auto_flow: row|column|row_dense|column_dense;
+  gap_y|row_gap: 1px;
+  gap_x|column_gap: 1px;
+  gap: 1px; // gap_x & gap_y
   overflow: visible|clip|hidden|scroll; // set x and y
   overflow: clip clip; // or separately
   overflow_clip_margin: content_box|padding_box|border_box 5; // number optional
+ 
+  // Flex
+  flex|flex_direction: row|column|row_reverse|column_reverse;
+  flex_basis: 1px;
+  flex_grow: 1;
+  flex_shrink: 1;
+  flex_wrap: no_wrap|wrap|wrap_reverse;
+
+  // Grid
+  grid_auto_flow: row|column|row_dense|column_dense;
   grid_row: span|start|end 10;
   grid_row: start_span|start_end|end_span 8 10;
   grid_column: span|start|end 10;
@@ -190,19 +263,13 @@ ui!((
   grid_auto_columns: 1px 3% 10fr; // ^
   grid_template_rows: 10:1px 10:3%; // ^, but {repetition}: before each Track
   grid_template_columns: 10:1px 10:3%; // ^
+
   // Separate Components
-  background: red; // alias: background_color
-  border_color: #ff0000;
-  border_radius: 1px 1%;
-  outline: 1px 1px #ff0000;
-  box_shadow: 1px 1px 1px 1px #ff0000;
-  z_index: 10 global; // not writing 'g'|'global' = local
   interaction; // adds `Interaction` component
   cursor_position; // adds `RelativeCursorPosition` component
-  focus_policy: pass // alias: focus
-  scroll_position: 1px 1px; // alias: scroll
-  // Custom Groups
-  size: 1px 1px; // width height, of Node
+  focus|focus_policy: pass 
+  scroll|scroll_position: 1px 1px;
+
 ))
 ```
 
