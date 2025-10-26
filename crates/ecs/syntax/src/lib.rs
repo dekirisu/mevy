@@ -308,19 +308,31 @@ use deki::*;
     fn query_to_redirect(query:TokenStream) -> TokenStream {
         let mut vec = query.into_iter().collect::<Vec<_>>();
         let mut post = qt!{.collect::<Vec<_>>()};
-        if let Some(a) = vec.last(){if a.is_punct('!'){
+
+        let is_enty = vec.last().is_some_and(|a|a.is_punct('!'));
+        let is_opti = vec.last().is_some_and(|a|a.is_punct('?'));
+
+        if is_enty || is_opti {
             vec.pop();
             post = qt!{};
-        }}
+        }
 
         let iter = TokenStream::from_iter(vec).peek_iter();
         let [typi,path] = peek_split_punct_once(iter,'.');
-        qt!{
+        if is_enty {qt!{
+            let Some(data) = world.get::<#typi>(me) else {continue};
+            let me = data. #path;
+        }}
+        else if is_opti {qt!{
+            let Some(data) = world.get::<#typi>(me) else {continue};
+            let Some(me) = data. #path else {continue};
+        }}
+        else {qt!{
             let Some(data) = world.get::<#typi>(me) else {continue};
             #[allow(for_loops_over_fallibles)]
             for me in data. #path #post
-        }
-    }
+        }} 
+   }
 
 // World Spawning \\
 
@@ -341,10 +353,10 @@ use deki::*;
 
         // NOTE: Mind the clone, try to dodge?
         let mut vec = iter.collect::<Vec<_>>();
-        let [leak,retu] = vec.last().map(|t|
-            [t.is_punct('>'),t.is_punct('<')]
+        let [leak,retu,ccmd] = vec.last().map(|t|
+            [t.is_punct('>'),t.is_punct('<'),t.is_punct('@')]
         ).unwrap_or_default();
-        if leak || retu {vec.pop();}
+        if leak || retu || ccmd {vec.pop();}
 
         let stream = TokenStream::from_iter(vec);
 
@@ -413,14 +425,15 @@ use deki::*;
             on_current.extend(on_world_block);
         }
 
-        match [leak,retu] {
-            [true, _] => on_current,
-            [_, true] => qt!{{#on_current me}},
-            [ _ , _ ] => qt!{{#on_current}}
+        match [leak,retu,ccmd] {
+            [true, _, _] => on_current,
+            [_, true, _] => qt!{{#on_current me}},
+            [_, _, true] => qt!{|mut world:Commands|{#on_current}},
+            [ _ , _ , _] => qt!{{#on_current}}
         }
 
     }
-
+ 
 // Recursion \\
 
     fn world_spawn_syntax_recursive(
@@ -481,6 +494,23 @@ use deki::*;
             use mevy_core_syntax::code as mecode;
             match first {
 
+//                TokenTree::Ident(ident) if ident.to_string().as_str() == "if" => {
+//                    commands.extend(qt!(#(#iter)*));
+//                }
+//
+//                TokenTree::Ident(ident) if ident.to_string().as_str() == "match" => {
+//                    commands.extend(qt!(#(#iter)*));
+//                }
+
+                TokenTree::Ident(ident) if ident.to_string().as_str() == "try" => {
+                    iter.next();
+                    commands.extend(qt!(
+                        if let Some(bundle) = #(#iter)* {
+                            this.insert(bundle);
+                        }
+                    ));
+                }
+
                 TokenTree::Ident(ident) => {
                     next!{first = ident.to_string().chars().next()}
                     let [func,mut attr] = peek_split_punct_once(iter,':');
@@ -514,7 +544,7 @@ use deki::*;
                     commands.extend(group.into_token_stream()); 
                 }
 
-                TokenTree::Group(g) if g.delimiter().is_bracked() => for group in iter {
+                TokenTree::Group(g) if g.delimiter().is_bracket() => for group in iter {
                     next!{*TokenTree::Group(group) = group}
                     let mut check = group.stream().into_iter();
                     if let (Some(TokenTree::Ident(n)),None) = (check.next(),check.next()) {
@@ -537,6 +567,19 @@ use deki::*;
                         ancestors.clone(), idx, spawn, parenting, mutato, 
                         spawn_token.clone(), world_token.clone(), entity_mut.clone()
                     );
+                }
+
+                TokenTree::Punct(p) if p.as_char() == '@' => {
+                    iter.next();
+                    let mut strm = iter.collect::<Vec<_>>();
+                    let attr = match strm.last() {
+                        Some(TokenTree::Group(_)) => {
+                            let b = strm.pop().unwrap().unwrap_group().stream();
+                            qt![,#b]
+                        }
+                        _ => qt![]
+                    };
+                    commands.extend(qt!(#(#strm)*(&mut this #attr);));
                 }
 
                 TokenTree::Punct(p) if p.as_char() == '.' => {
