@@ -1,6 +1,6 @@
 [package]
 name = "mevy_ecs"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 
 authors = ["Dekirisu <dekirisu@gmail.com>"]
@@ -21,6 +21,7 @@ features = ["proc"]
 
 [features]
 default = []
+experimental = []
 "0.15" = ["mevy_ecs_syntax/0.15"]
 "0.16" = ["mevy_ecs_syntax/0.16"]
 "0.16-rc" = ["mevy_ecs_syntax/0.16-rc"]
