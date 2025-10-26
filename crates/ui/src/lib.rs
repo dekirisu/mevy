@@ -16,9 +16,15 @@ use proc_macro::TokenStream as CompilerTokens;
     ///     border: 5px #00ff00;
     /// )));
     /// ```
+    /// The same, but 'slim':
+    /// ```rust
+    /// cmd.spawn(ui!( w:50 h:50 bg:#f00 shadow:0+0+5+5#f00 border:5#0f0 ));
+    /// ```
     ///
     /// ## Possible Modes
     /// Depending on the delimiters & if there is a name defined, the function of this macro differs:
+    /// - 'Slim' Inline Tuple Mode | `ui!{ w:8 h:8 l:2 t:2 }`
+    ///     - returns a tuple of mentioned UI components
     /// - Inline Tuple Mode | `ui!{( width: 1px; )}`:
     ///     - returns a tuple of mentioned UI components
     /// - Function Tuple Mode | `ui!{func_name( width: 1px; )}`: 
@@ -39,23 +45,26 @@ use proc_macro::TokenStream as CompilerTokens;
     
         match iter.peek().unwrap() {
             TokenTree::Ident(ident) if ident.to_string().chars().next().unwrap().is_lowercase() => {
-                let ident = iter.next().unwrap().risk_ident();
+                let ident = iter.next().unwrap().unwrap_ident();
                 match iter.peek().unwrap() {
                     TokenTree::Group(g) if g.delimiter().is_parenthesis() => {
-                        let g = iter.next().unwrap().risk_group();
+                        let g = iter.next().unwrap().unwrap_group();
                         let bundle = bundle(g.stream().peek_iter(),iter.next());
                         qt!{pub fn #ident () -> impl Bundle {#bundle}}
                     }
                     TokenTree::Group(g) if g.delimiter().is_brace() => {
-                        let g = iter.next().unwrap().risk_group();
-                        let prep = UiPrep::from_stream(g.stream());
+                        let g = iter.next().unwrap().unwrap_group();
+                        let prep = UiPrep::from_stream(g.stream(),false,|a,_|a.is_punct(';'));
                         let (expected,edits) = prep.get_edits();
                         let attr = expected.into_iter()
                             .map(|(v,t)|qt!(#v: &mut #t))
                             .collect::<Vec<_>>();
                         qt!{pub fn #ident (#(#attr),*) {#edits}}
                     }
-                    _ => todo!{} 
+                    _ => {
+                        let aa = qt![#ident #(#iter)*];
+                        bundle_slim(aa.peek_iter(),None)
+                    }
                 }
             }
 
@@ -63,10 +72,13 @@ use proc_macro::TokenStream as CompilerTokens;
                 kill!{*Some(TokenTree::Group(group)) = iter.next()}
                 match group.delimiter() {
                     Delimiter::Parenthesis => bundle(group.stream().peek_iter(),iter.next()),
+                    Delimiter::Bracket => bundle_slim(group.stream().peek_iter(),iter.next()),
                     _ => todo!{}
                 }
             }
-            _ => todo!{}
+
+            _ => bundle_slim(iter,None),
+
         }.into()
     }
 
