@@ -1,15 +1,16 @@
 use mevy_ecs_syntax::*;
-use proc_macro::TokenStream as CompilerTokens;
+use proc_macro::TokenStream as Cokens;
+use TokenStream as Tokens;
 use deki::*;
 
 #[proc_macro]
-pub fn entity(stream:CompilerTokens) -> CompilerTokens {
+pub fn entity(stream:Cokens) -> Cokens {
     world_spawn_syntax(stream.into()).into()
 }
 
 #[proc_macro]
-pub fn modify(stream:CompilerTokens) -> CompilerTokens {
-    let stream: TokenStream = stream.into();
+pub fn modify(stream:Cokens) -> Cokens {
+    let stream: Tokens = stream.into();
     world_spawn_syntax(qt!(<|> #stream)).into()
 }
 
@@ -25,8 +26,8 @@ pub fn modify(stream:CompilerTokens) -> CompilerTokens {
     /// - get_mut: `let mut time = gere![mut Time].unwrap();`
     #[cfg(feature="experimental")]
     #[proc_macro]
-    pub fn gere (item:CompilerTokens) -> CompilerTokens {
-        let stream: TokenStream = item.into();
+    pub fn gere (item:Cokens) -> Cokens {
+        let stream: Tokens = item.into();
         let mut stream = stream.peek_iter();
         let get = stream.next_if(|a|a.is_string("mut"))
                         .map(|_|qt![get_resource_mut])
@@ -45,11 +46,11 @@ pub fn modify(stream:CompilerTokens) -> CompilerTokens {
     /// - usage: `gere![Struct.field = 100];`
     #[cfg(feature="experimental")]
     #[proc_macro]
-    pub fn edre (item:CompilerTokens) -> CompilerTokens {
-        let stream: TokenStream = item.into();
+    pub fn edre (item:Cokens) -> Cokens {
+        let stream: Tokens = item.into();
         let mut stream = stream.peek_iter();
         let comp = stream.next().unwrap();
-        let left = TokenStream::from_iter(stream);
+        let left = Tokens::from_iter(stream);
         qt!{if let Some(mut data) = world.get_resource_mut::<#comp>() {
             data #left;
         }}.into()
@@ -67,8 +68,8 @@ pub fn modify(stream:CompilerTokens) -> CompilerTokens {
     /// - has_component?: `if geco![Time?] {}`
     #[cfg(feature="experimental")]
     #[proc_macro]
-    pub fn geco (item:CompilerTokens) -> CompilerTokens {
-        let stream: TokenStream = item.into();
+    pub fn geco (item:Cokens) -> Cokens {
+        let stream: Tokens = item.into();
         let mut stream = stream.as_vec();
         let last = match stream.last().cloned() {
             Some(TokenTree::Punct(p)) if p.as_char() != '>' => {
@@ -96,7 +97,7 @@ pub fn modify(stream:CompilerTokens) -> CompilerTokens {
             },
             _ => qt![me]
         };
-        let comp = TokenStream::from_iter(stream.into_iter()); 
+        let comp = Tokens::from_iter(stream.into_iter()); 
         qt!{world.#get::<#comp>(#enty)#post}.into()
     }
 
@@ -105,17 +106,94 @@ pub fn modify(stream:CompilerTokens) -> CompilerTokens {
     /// - usage: `geco![Struct.field = 100];`
     #[cfg(feature="experimental")]
     #[proc_macro]
-    pub fn edco (item:CompilerTokens) -> CompilerTokens {
-        let stream: TokenStream = item.into();
+    pub fn edco (item:Cokens) -> Cokens {
+        let stream: Tokens = item.into();
         let mut stream = stream.peek_iter();
         let is_deref = stream.next_if(|a|a.is_punct('*')).is_some();
         let comp = stream.next().unwrap();
-        let rest = TokenStream::from_iter(stream);
+        let rest = Tokens::from_iter(stream);
         let data = if is_deref {qt![*data]} else {qt![data]};
         qt!{if let Some(mut data) = world.get_mut::<#comp>(me) {
             #data #rest;
         }}.into()
     }
+
+// Spawners \|
+
+    /// "D(eferred) En(tity)" 
+    /// Alternative `entity!` for `world: DeferredWorld`
+    /// - `den![..]`: spawn a `me: Entity`
+    /// - `den![&..]`: edit a `me: Entity`
+    /// - `den![*..]: edit a `world: EntityCommands`
+    /// - `den![#Marker|..]: edit all Entities with `Marker` component
+    #[proc_macro]
+    pub fn den(stream:Cokens) -> Cokens {
+        let stream: Tokens = stream.into();
+        let mut iter = stream.peek_iter();
+        let dir = en_translate(qt![-],&mut iter);
+        let stream = Tokens::from_iter(iter);
+        mevy_ecs_syntax::world_spawn_syntax(qt!(#dir #stream)).into()
+    }
+
+    /// "W(orld) En(tity)" 
+    /// Alternative `entity!` for `world: World`
+    /// - `wen![..]`: spawn a `me: Entity`
+    /// - `wen![&..]`: edit a `me: Entity`
+    /// - `wen![*..]: edit a `world: EntityWorldMut`
+    /// - `wen![#Marker|..]: edit all Entities with `Marker` component
+    #[proc_macro]
+    pub fn wen(stream:Cokens) -> Cokens {
+        let stream: Tokens = stream.into();
+        let mut iter = stream.peek_iter();
+        let dir = en_translate(qt![+],&mut iter);
+        let stream = Tokens::from_iter(iter);
+        mevy_ecs_syntax::world_spawn_syntax(qt!(#dir #stream)).into()
+    }
+
+    /// "C(ommand) En(tity)" 
+    /// Alternative `entity!` for `world: Commands`
+    /// - `cen![..]`: spawn a `me: Entity`
+    /// - `cen![&..]`: edit a `me: Entity`
+    /// - `cen![*..]: edit a `world: EntityWorldMut`
+    /// - `cen![#Marker|..]: edit all Entities with `Marker` component
+     #[proc_macro]
+    pub fn cen(stream:Cokens) -> Cokens {
+        let stream: Tokens = stream.into();
+        let mut iter = stream.peek_iter();
+        let dir = en_translate(qt![],&mut iter);
+        let stream = Tokens::from_iter(iter);
+        mevy_ecs_syntax::world_spawn_syntax(qt!(#dir #stream)).into()
+    }
+
+
+// Spawners Helper \|
+
+    fn en_translate(left:Tokens,iter:&mut PeekIter) -> Tokens {match iter.peek_punct(){
+        '#' => {
+            let me = iter.collect_til_punct('|');
+            iter.next();
+            qt![<#left|#(#me)*>]
+        }
+        '*' => {
+            iter.next();
+            let me = if iter.peek_punct() != ':' {qt!()} else {
+                iter.next();
+                let this = iter.next().unwrap();
+                qt!{#this}
+            };
+            qt!{<#left*#me>}
+        }
+        '&' => {
+            iter.next();
+            let me = if iter.peek_punct() != ':' {qt!()} else {
+                iter.next();
+                let this = iter.next().unwrap();
+                qt!{#this}
+            };
+            qt!{<#left|#me>}
+        }
+        _ => if left.is_empty() {qt!{}} else {qt!{<#left>}}
+    }}
 
 
 // EOF \\
