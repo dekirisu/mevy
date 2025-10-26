@@ -254,3 +254,36 @@ spawn!{
     ))]
 }
 ```
+
+# Experimental
+Macros I use but are very bare-bone and might change a lot quckly.
+
+## Get Resource
+Get Resource
+- required: mutable `world: World|DeferredWorld`
+- ref: `let time = gere![Time].unwrap();`
+- mut: `let mut time = gere![mut Time].unwrap();`
+
+## Edit Resource
+Quickly Edit Resource (if available)
+- required: mutable `world: World|DeferredWorld`
+- usage: `gere![Struct.field = 100];`
+
+## Get Component
+Get Component
+- required: mutable `world: World|DeferredWorld`
+- required: `me: Entity`
+- ref: `let time = geco![Time].unwrap();`
+- mut: `let mut time = geco![mut Time].unwrap();`
+- cloned: `let time = geco![Time*].unwrap();`
+- has?: `if geco![Time?] {}`
+
+## Edit Component
+Quickly Edit Components (if available)
+- required: mutable `world: World|DeferredWorld`
+- usage: `geco![Struct.field = 100];`
+
+
+
+
+
