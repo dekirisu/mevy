@@ -258,6 +258,18 @@ spawn!{
 # Experimental
 Macros I use but are very bare-bone and might change a lot quckly.
 
+## Alternative Macros
+Macros are split into the base accessors:
+- `cen![..]`: C(ommand) En(tity)
+- `den![..]`: D(eferredWorld) En(tity)
+- `wen![..]`: W(orld) En(tity)
+
+The Entity accessors change to:
+- `cen![..]`: spawn a `me: Entity`
+- `cen![&..]`: edit a `me: Entity`
+- `cen![*..]: edit a `world: EntityCommands`
+- `cen![#Marker|..]: edit all Entities with `Marker` component
+
 ## Get Resource
 Get Resource
 - required: mutable `world: World|DeferredWorld`
