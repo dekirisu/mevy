@@ -143,13 +143,16 @@ use syn::LitFloat;
         /// - Base: not a Val::_, but a number lit: Iterator has progressed
         /// - Shift: a Val::_/
         fn next_valvar(&mut self) -> Step<(Option<Punct>,Literal),TokenStream> {
-            let sign = !self.peek().is_punct('-');
-            let punct = if sign {None} else {self.next().map(|t|t.risk_punct())};
+            let (sign,punct) = match self.peek_punct() {
+                '-' => (false,self.next().map(|t|t.unwrap_punct())),
+                '+' => {self.next();(true,None)},
+                _ => (true,None)
+            };
             match self.peek().try_val_variant(sign) {
                 Check::Maybe(m) => {
                     let base = self.next();
                     match self.seek_val_variant(m){
-                        None => Step::Base((punct,base.unwrap().risk_literal())),
+                        None => Step::Base((punct,base.unwrap().unwrap_literal())),
                         Some(v) => Step::Shift(v.with_span(base.span()))
                     }
                 }
@@ -166,6 +169,14 @@ use syn::LitFloat;
 
 // Token Handling \\
 
+    fn hex_check(text:&str) -> bool {
+        text.to_lowercase().chars().filter(|a|match a {
+            '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|
+            '8'|'9'|'a'|'b'|'c'|'d'|'e'|'f' => false,
+            _ => true
+        }).next().is_none()
+    }
+
     #[ext(pub trait UiTokenTree)]
     impl TokenTree {
         fn try_val_variant(&self,sign:bool) -> Check<TokenStream,f32> {
@@ -176,12 +187,17 @@ use syn::LitFloat;
             let mut t = self.to_string();
             match t.len() {
                 6|8 => {}
+                5 => {
+                    let vec = t.chars().collect::<Vec<_>>();
+                    let [r,g,b,a0,a1] = vec.try_into().unwrap();
+                    t = format!["{r}{r}{g}{g}{b}{b}{a0}{a1}"];
+                }
                 3|4 => t = zip(t.chars(),t.chars())
                     .map(|(a,b)|String::from_iter([a,b]))
                     .collect(),
                 _ => exit!{},
             }
-            u32::from_str_radix(&t,16).ok().map(|_|t)
+            hex_check(&t).then_some(t)
         }
     }
 
