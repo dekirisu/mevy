@@ -219,7 +219,7 @@ ui!((
   border: 1px 1px 1px 1px #ff0000; // see 'Edge Selection'
   border_color: #ff0000;
   outline: 1px 1px #ff0000;
-  radius|border_radius: 1px 1%;
+  round|border_radius: 1px 1%;
 
   // Text Styling
   text|text_size|font_size: 20;
