@@ -229,6 +229,12 @@ ui!((
   color|font_color: #ff0000;
   text_shadow: 2 2 #000; // x y color
 
+  // Images
+  img|image: $an_image; // an_image: Handle<Image>
+  img|image: $(path.to.image);
+  img|image|image_color: #000;
+  img|image: flip_x|flip_y;
+
   // Align Self
   justify_self: auto|start|end|center|baseline|stretch;
   align_self: ^|flex_start|flex_end;
