@@ -199,6 +199,8 @@ use syn::LitFloat;
                 "flex_direction": "flex";
                 "min_width": "min_w";
                 "min_height": "min_h";
+                "max_width": "max_w";
+                "max_height": "max_h";
                 "column_gap": "gap_x";
                 "row_gap": "gap_y";
                 "border_radius": "rounded" "round";
@@ -209,6 +211,8 @@ use syn::LitFloat;
                 "relative_cursor_position": "cursor_position" "cursor_pos";
                 "focus_policy": "focus";
                 "scroll_position": "scroll";
+                "image": "img";
+                "image_color": "img_color";
 
             }
         }
@@ -484,6 +488,29 @@ use syn::LitFloat;
                 }
             }
 
+            "image" => match iter.peek_punct() {
+                '$' => {
+                    iter.next();
+                    exit!{var = iter.next(),inner_tokens()}
+                    out!{ImageNode => _ [.image][#var] [None]}
+                },
+                '#' => match iter.try_into_color().prepare() {
+                    Some((color,_,extra)) => out!{ImageNode => Color [.color][#color] [extra]},
+                    _ => ()
+                }
+                _ => match iter.next() {
+                    Some(t) => match t.to_string().as_str() {
+                        "flip_y" => out!{ImageNode => _ [.flip_y][true] [None]},
+                        "flip_x" => out!{ImageNode => _ [.flip_x][true] [None]},
+                        _ => {}
+                    }
+                    _ => {}
+                }
+            }
+
+            "image_color" => match iter.try_into_color().prepare() {
+                Some((color,_,extra)) => out!{ImageNode => Color [.color][#color] [extra]},
+            _=>()}
 
 
 // Custom Groups \\
@@ -945,22 +972,33 @@ use syn::LitFloat;
         }
 
         fn try_into_color(&mut self) -> UiToken {  
-            if self.peek_punct() == '#' {
-                self.next();
-                kill!{(stream,span) = self.next_hex_color()}
-                UiToken::new(Some(stream),span,self.try_extra())
-            } 
-            else if let Some(css) = self.next() {
-                if css.is_valid_keep("c"){
-                    UiToken::new(None,css.span(),self.try_extra())
-                } else {
-                    let css = css.unwrap_ident().to_case(Case::UpperSnake);
-                    UiToken::new(Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span(),self.try_extra())
+            match self.peek_punct() {
+                '$' => {
+                    self.next();
+                    kill!{var = self.next()} 
+                    let tok = var.inner_tokens();
+                    UiToken::new(Some(tok),var.span(),self.try_extra())
+                }
+                '#' => {
+                    self.next();
+                    kill!{(stream,span) = self.next_hex_color()}
+                    UiToken::new(Some(stream),span,self.try_extra())
+                }
+                _ => {
+                    if let Some(css) = self.next() {
+                        if css.is_valid_keep("c"){
+                            UiToken::new(None,css.span(),self.try_extra())
+                        } else {
+                            let css = css.unwrap_ident().to_case(Case::UpperSnake);
+                            UiToken::new(Some(qt!{Color::Srgba(bevy::color::palettes::css::#css)}),css.span(),self.try_extra())
+                        }
+                    }
+                    else {
+                        UiToken::new(None,Span::call_site(),None)
+                    }
                 }
             }
-            else {UiToken::new(None,Span::call_site(),None)}
         }
-
     }
 
     fn compile_error_no_version() -> TokenStream {
