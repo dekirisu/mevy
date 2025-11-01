@@ -13,7 +13,7 @@ fn startup(mut world:Commands){
     entity!{Camera2d}
     entity!{
         BackgroundColor(#ff0000);
-        BorderColor(#00ffff);
+        BorderColor::all(#00ffff);
         Node{ width:80px, height:80px, margin:[>16px], !};
         .observe(destroy_on::<Click>(e1));
         .observe(destroy_on::<Click>(named_child));

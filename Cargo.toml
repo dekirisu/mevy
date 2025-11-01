@@ -25,6 +25,7 @@ ui = ["dep:mevy_ui"]
 "0.15" = ["mevy_ecs/0.15","mevy_ui?/0.15"]
 "0.16-rc" = ["mevy_ecs/0.16-rc","mevy_ui?/0.16-rc"]
 "0.16" = ["mevy_ecs/0.16","mevy_ui?/0.16"]
+"0.17" = ["mevy_ecs/0.17","mevy_ui?/0.17"]
 
 [workspace.dependencies.mevy_core]
 path = "crates/core"
@@ -65,7 +66,7 @@ members = [
 ]
 
 [dev-dependencies.bevy]
-version = "0.16.0"
+version = "0.17.0"
 default-features = false
 features = [
     "bevy_window",
@@ -77,4 +78,4 @@ features = [
 
 [dev-dependencies.mevy]
 path = ""
-features = ["0.16"]
+features = ["0.17"]

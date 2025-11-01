@@ -20,8 +20,9 @@ workspace = true
 features = ["proc"]
 
 [features]
-default = []
+default = ["experimental"]
 experimental = []
 "0.15" = ["mevy_ecs_syntax/0.15"]
 "0.16" = ["mevy_ecs_syntax/0.16"]
 "0.16-rc" = ["mevy_ecs_syntax/0.16-rc"]
+"0.17" = ["mevy_ecs_syntax/0.17"]

@@ -61,7 +61,7 @@ fn startup(mut cmd:Commands){
             spread_radius: 8px,
         }]),
         BackgroundColor(#ffffff),
-        BorderColor(#ff0000),
+        BorderColor::all(#ff0000),
         BorderRadius::all(6px),
         neat_outline()
     )}}}

@@ -81,10 +81,11 @@ use deki::*;
             | Self::World {entry:_,entity} 
             => entity.clone(),
             Self::ChildBuilder{entry} => Some({
-                #[cfg(feature="0.16")]
+                #[cfg(any(feature="0.16",feature="0.17"))]
                 qt!{#entry.target_entity()}
                 #[cfg(feature="0.15")]
                 qt!{#entry.parent_entity()}
+                #[cfg(not(feature="0.17"))]
                 #[cfg(not(feature="0.16"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
@@ -111,10 +112,11 @@ use deki::*;
             Self::EntityWorldMut { entry }
             => qt!{unsafe{#entry.world_mut()}},
             Self::ChildBuilder{entry} => {
-                #[cfg(feature="0.16")]
+                #[cfg(any(feature="0.16",feature="0.17"))]
                 qt!{#entry.commands_mut()}
                 #[cfg(feature="0.15")]
                 qt!{#entry}
+                #[cfg(not(feature="0.17"))]
                 #[cfg(not(feature="0.16"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
@@ -128,10 +130,11 @@ use deki::*;
             Self::EntityWorldMut { entry }
             => qt!{let world = unsafe{#entry.world_mut()};},
             Self::ChildBuilder { entry } => {
-                #[cfg(feature="0.16")]
+                #[cfg(any(feature="0.16",feature="0.17"))]
                 qt!{let mut world = #entry.commands_mut();}
                 #[cfg(feature="0.15")]
                 qt!{}
+                #[cfg(not(feature="0.17"))]
                 #[cfg(not(feature="0.16"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
@@ -145,10 +148,11 @@ use deki::*;
             | Self::EntityWorldMut { entry:_ } 
             => qt!{world},
             Self::ChildBuilder { entry:_ } => {
-                #[cfg(feature="0.16")]
+                #[cfg(any(feature="0.16",feature="0.17"))]
                 qt!{world}
                 #[cfg(feature="0.15")]
                 {self.get_entry()}
+                #[cfg(not(feature="0.17"))]
                 #[cfg(not(feature="0.16"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
@@ -175,10 +179,11 @@ use deki::*;
             Self::ChildBuilder{entry:_} => {
                 #[allow(unused_variables)]
                 let world = self.use_entry();
-                #[cfg(feature="0.16")]
+                #[cfg(any(feature="0.16",feature="0.17"))]
                 qt!{#world.queue(move|world:&mut World|{#inner});}
                 #[cfg(feature="0.15")]
                 qt!{#world.enqueue_command(move|world:&mut World|{#inner});}
+                #[cfg(not(feature="0.17"))]
                 #[cfg(not(feature="0.16"))]
                 #[cfg(not(feature="0.15"))]
                 compile_error_no_version()
@@ -465,7 +470,7 @@ use deki::*;
         let name_tmp = name.to_string().ident();
  
         if let Some(parent) = ancestors.last() {
-            #[cfg(feature="0.16")]
+            #[cfg(any(feature="0.16",feature="0.17"))]
             parenting.extend(qt!{
                 #world_token.#entity_mut(#name_tmp).insert(ChildOf(#parent));
             });
@@ -473,6 +478,7 @@ use deki::*;
             parenting.extend(qt!{
                 #world_token.#entity_mut(#name_tmp).set_parent(#parent);
             });
+            #[cfg(not(feature="0.17"))]
             #[cfg(not(feature="0.16"))]
             #[cfg(not(feature="0.15"))]
             parenting.extend(compile_error_no_version());
@@ -600,18 +606,26 @@ use deki::*;
                             let trigger = "trigger".ident_span(span_entity);
                             let let_event = "event".ident_span(span_entity);
                             
+                            #[cfg(feature="0.17")]
+                            let trigger_entity = qt!{trigger.event_target()};
                             #[cfg(feature="0.16")]
                             let trigger_entity = qt!{trigger.target()};
                             #[cfg(feature="0.15")]
                             let trigger_entity = qt!{trigger.entity()};
+                            #[cfg(not(feature="0.17"))]
                             #[cfg(not(feature="0.15"))]
                             #[cfg(not(feature="0.16"))]
                             let trigger_entity = compile_error_no_version();
 
-                            commands.extend(match span_world  { 
+                            #[cfg(feature="0.17")]
+                            let triname = qt!{On};
+                            #[cfg(not(feature="0.17"))]
+                            let triname = qt!{Trigger};
+
+                             commands.extend(match span_world  { 
                                 None => {
                                     let this = "this".ident_span(span_entity);
-                                    qt!(this.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                   qt!(this.observe(move|#trigger:#triname<#(#event)*>,mut world: Commands|{
                                         #[allow(unused_variables)]
                                         let mut #this = world.entity(#trigger_entity);
                                         #[allow(unused_variables)]
@@ -622,7 +636,7 @@ use deki::*;
                                 Some(span_world) => {
                                     let entity = "entity".ident_span(span_entity);
                                     let world = "world".ident_span(span_world);
-                                    qt!(this.observe(move|#trigger:Trigger<#(#event)*>,mut world: Commands|{
+                                    qt!(this.observe(move|#trigger:#triname<#(#event)*>,mut world: Commands|{
                                         #[allow(unused_variables)]
                                         let #entity = #trigger_entity;
                                         #[allow(unused_variables)]
