@@ -13,11 +13,14 @@
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
+# bevy 0.17
+mevy_ui = {version="0.3",features=["0.17"]}
+
 # bevy 0.16
-mevy_ui = {version="0.2",features=["0.16"]}
+mevy_ui = {version="0.3",features=["0.16"]}
 
 # bevy 0.15
-mevy_ui = {version="0.2",features=["0.15"]}
+mevy_ui = {version="0.3",features=["0.15"]}
 ```
 
 ## ⭐ The Star of the Crate: CSS-like Notation
