@@ -22,11 +22,14 @@ A **growing** set of **m**acros which add some witchcraft into b**evy**, current
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
+# bevy 0.17
+mevy = {version="0.3",features=["0.17"]}
+
 # bevy 0.16
-mevy = {version="0.2",features=["0.16"]}
+mevy = {version="0.3",features=["0.16"]}
 
 # bevy 0.15
-mevy = {version="0.2",features=["0.15"]}
+mevy = {version="0.3",features=["0.15"]}
 ```
 
 Then just `use` all of it:
@@ -72,6 +75,13 @@ Using `ui!((..))` (inner round braces) will return a tuple of **mentioned compon
 - read about **available fields**, custom fields & notation in [this readme](crates/ui/README.md)
 - see [this example](examples/ui_bundle.rs).
 ```rust
+// Slim Mode
+c.spawn(ui!(
+    w:100 h:100 bg:#fff round:6 border:5#f00 
+    shadow:10%10%3+8#fa4 neat_outline
+));
+
+// CSS-Like Mode (does the same)
 c.spawn(ui!((
     size:          100px 100px;
     border:        5px #ff0000;
