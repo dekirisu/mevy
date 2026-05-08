@@ -17,7 +17,7 @@ fn startup(mut cmd:Commands){
     )))
     .with_children(|p|{
         p.spawn(neat_box())
-        .observe(|trigger:Trigger<Pointer<Click>>,mut query:Query<(&mut Node,&mut BoxShadow)>|{
+        .observe(|trigger:On<Pointer<Click>>,mut query:Query<(&mut Node,&mut BoxShadow)>|{
             let (mut node,mut box_shadow) = query.get_mut(trigger.observer()).unwrap();
             bigger_border_h(&mut node, &mut box_shadow);
         });
@@ -51,6 +51,7 @@ fn startup(mut cmd:Commands){
             width:  100px,
             height: 100px,
             border: [>5px],
+            border_radius: BorderRadius::all(6px),
             ..default()
         },
         BoxShadow(vec![ShadowStyle{
@@ -62,7 +63,6 @@ fn startup(mut cmd:Commands){
         }]),
         BackgroundColor(#ffffff),
         BorderColor::all(#ff0000),
-        BorderRadius::all(6px),
         neat_outline()
     )}}}
 

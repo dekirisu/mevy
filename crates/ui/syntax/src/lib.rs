@@ -108,13 +108,11 @@ use syn::LitFloat;
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 match s.as_str() {
                     "BoxShadow" => {
-                        #[cfg(any(feature="0.16",feature="0.17"))]
+                        #[cfg(any(feature="0.16",feature="0.17",feature="0.18"))]
                         qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);}
                         #[cfg(feature="0.15")]
                         qt!{let mut #var = #typ::default();}
-                        #[cfg(not(feature="0.15"))]
-                        #[cfg(not(feature="0.16"))]
-                        #[cfg(not(feature="0.17"))]
+                        #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18")))]
                         compile_error_no_version()
                     }
                     _ => qt!{let mut #var = #typ::default();}
@@ -344,9 +342,9 @@ use syn::LitFloat;
 
             "border_color" => match iter.try_into_color().prepare() {
                 Some((color,_,extra)) => {
-                    #[cfg(not(feature="0.17"))]
+                    #[cfg(not(any(feature="0.17",feature="0.18")))]
                     out!{BorderColor => Color [.0][#color] [extra]}
-                    #[cfg(feature="0.17")]
+                    #[cfg(any(feature="0.17",feature="0.18"))]
                     for a in qar!([top][right][bottom][left]){
                         out!{BorderColor => Color [.#a][#color] [extra.clone()]}
                     }
@@ -359,7 +357,10 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,vals) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
+                    #[cfg(not(feature="0.18"))]
                     out!{BorderRadius => Val [.#field][#val] [oval.extra]}
+                    #[cfg(feature="0.18")]
+                    out!{Node => Val [.border_radius.#field][#val] [oval.extra]}
                 }
             }
 
@@ -396,26 +397,24 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,iter.into_vals()) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
-                    #[cfg(any(feature="0.16",feature="0.17"))]
+                    #[cfg(any(feature="0.16",feature="0.17",feature="0.18"))]
                     out!{BoxShadow => Val [[0].#field][#val] [oval.extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Val [.#field][#val] [oval.extra]}
-                    #[cfg(not(feature="0.17"))]
-                    #[cfg(not(feature="0.16"))]
-                    #[cfg(not(feature="0.15"))]{
+                    #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18")))]
+                    {
                         let err = compile_error_no_version();
                         out!{BoxShadow => Val [;][#err] [None]}
                     }
                 }
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
-                    #[cfg(any(feature="0.16",feature="0.17"))]
+                    #[cfg(any(feature="0.16",feature="0.17",feature="0.18"))]
                     out!{BoxShadow => Color [[0].#field][#color] [extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Color [.#field][#color] [extra]}
-                    #[cfg(not(feature="0.17"))]
-                    #[cfg(not(feature="0.16"))]
-                    #[cfg(not(feature="0.15"))]{
+                    #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18")))]
+                    {
                         let err = compile_error_no_version();
                         out!{BoxShadow => Color [;][#err] [None]}
                     }
@@ -454,9 +453,9 @@ use syn::LitFloat;
                 if vals.is_empty(){
                     map.entry("ScrollPosition");
                 } else {
-                    #[cfg(not(feature="0.17"))]
+                    #[cfg(not(any(feature="0.17",feature="0.18")))]
                     let fields = qar!([x_offset][y_offset]);
-                    #[cfg(feature="0.17")]
+                    #[cfg(any(feature="0.17",feature="0.18"))]
                     let fields = qar!([x][y]);
                     for (field,oval) in zip(fields,iter.into_vals()) {
                         next!{val = oval.main}
@@ -470,7 +469,10 @@ use syn::LitFloat;
 
             "line_height" => {
                 kill!{val = iter.next()}
+                #[cfg(not(feature="0.18"))]
                 out!{TextFont => _ [.line_height][bevy::text::LineHeight::RelativeToFont(#val as f32)] [None]}
+                #[cfg(feature="0.18")]
+                out!{LineHeight => _ [][LineHeight::RelativeToFont(#val as f32)] [None]}
             }
 
             "justify_text" => {
@@ -496,9 +498,9 @@ use syn::LitFloat;
                     match var.to_string().as_str() {
                         "Left"|"Center"|"Right"|"Justified"
                             => {
-                                #[cfg(feature="0.17")]
+                                #[cfg(any(feature="0.17",feature="0.18"))]
                                 out!{TextLayout => _ [.justify][Justify::#var] [None]}
-                                #[cfg(not(feature="0.17"))]
+                                #[cfg(not(any(feature="0.17",feature="0.18")))]
                                 out!{TextLayout => _ [.justify][JustifyText::#var] [None]}
                             },
                         _   => out!{TextLayout => _ [.linebreak][LineBreak::#var] [None]}
@@ -664,9 +666,9 @@ use syn::LitFloat;
                     out!{Node => Val [.#field.#field2] [#val] [oval.extra]}
                 }
                 if let Some((color,_,extra)) = iter.try_into_color().prepare() {
-                    #[cfg(not(feature="0.17"))]
+                    #[cfg(not(any(feature="0.17",feature="0.18")))]
                     out!{BorderColor => Color [.0][#color] [extra]}
-                    #[cfg(feature="0.17")]
+                    #[cfg(any(feature="0.17",feature="0.18"))]
                     for a in qar!([top][right][bottom][left]){
                         out!{BorderColor => Color [.#a][#color] [extra.clone()]}
                     }
