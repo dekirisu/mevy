@@ -1,0 +1,13 @@
+[book]
+title = "mevy"
+description = "Macros for Bevy"
+authors = ["Dekirisu"]
+
+
+[output.html]
+no-section-label = true
+preferred-dark-theme = "ayu"
+default-theme = "ayu"
+
+[output.html.playground]
+runnable = false
