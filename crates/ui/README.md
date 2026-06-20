@@ -13,11 +13,17 @@
 ## Setup
 Multiple bevy versions are supported and managed by features:
 ```toml
+# bevy 0.18
+mevy_ui = {version="0.3",features=["0.18"]}
+
+# bevy 0.17
+mevy_ui = {version="0.3",features=["0.17"]}
+
 # bevy 0.16
-mevy_ui = {version="0.2",features=["0.16"]}
+mevy_ui = {version="0.3",features=["0.16"]}
 
 # bevy 0.15
-mevy_ui = {version="0.2",features=["0.15"]}
+mevy_ui = {version="0.3",features=["0.15"]}
 ```
 
 ## ⭐ The Star of the Crate: CSS-like Notation
@@ -228,6 +234,12 @@ ui!((
   leading|line_height: 1.2;
   color|font_color: #ff0000;
   text_shadow: 2 2 #000; // x y color
+
+  // Images
+  img|image: $an_image; // an_image: Handle<Image>
+  img|image: $(path.to.image);
+  img|image|image_color: #000;
+  img|image: flip_x|flip_y;
 
   // Align Self
   justify_self: auto|start|end|center|baseline|stretch;

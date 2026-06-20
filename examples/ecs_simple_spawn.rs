@@ -13,7 +13,7 @@ fn startup(mut world:Commands){
     entity!{Camera2d}
     entity!{
         BackgroundColor(#ff0000);
-        BorderColor(#00ffff);
+        BorderColor::all(#00ffff);
         Node{ width:80px, height:80px, margin:[>16px], !};
         .observe(destroy_on::<Click>(e1));
         .observe(destroy_on::<Click>(named_child));
@@ -34,12 +34,12 @@ fn startup(mut world:Commands){
     }
 }
 
-fn destroy_on <E:Debug+Clone+Reflect> (entity:Entity) -> impl Fn(Trigger<Pointer<E>>,Commands) {
+fn destroy_on <E:Debug+Clone+Reflect> (entity:Entity) -> impl Fn(On<Pointer<E>>,Commands) {
     move|_,mut world|{if let Ok(mut ecmd) = world.get_entity(entity){
         ecmd.despawn();
     }}
 }
 
-fn destroy_self_on <E:Debug+Clone+Reflect> (trigger:Trigger<Pointer<E>>,mut cmd:Commands) {
+fn destroy_self_on <E:Debug+Clone+Reflect> (trigger:On<Pointer<E>>,mut cmd:Commands) {
     cmd.entity(trigger.observer()).despawn();
 }
