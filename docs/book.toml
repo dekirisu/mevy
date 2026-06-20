@@ -6,6 +6,7 @@ authors = ["Dekirisu"]
 
 [output.html]
 no-section-label = true
+sidebar-header-nav = false
 preferred-dark-theme = "ayu"
 default-theme = "ayu"
 

@@ -12,3 +12,8 @@
   - [Entity Selectors](api-entity-selectors.md)
   - [CSS-like Fields](api-ui-fields.md)
   - [Grid Track Syntax](api-grid-tracks.md)
+- [Guides](guides-index.md)
+  - [Building a UI](guides-building-a-ui.md)
+  - [Entity Queries](guides-entity-queries.md)
+  - [Custom Fields](guides-custom-fields.md)
+  - [Bevy Version Compatibility](guides-version-compat.md)
