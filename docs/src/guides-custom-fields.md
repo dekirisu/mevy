@@ -1,6 +1,15 @@
 # Custom Fields
 
-Create reusable UI components with custom fields in `ui!{}`.
+Custom fields let you define reusable UI components in `ui!{}`. They're the mevy equivalent of CSS classes or React components — define a styled element once, use it everywhere.
+
+## How Custom Fields Work
+
+A custom field is any function that returns `impl Bundle`. When you write `my_field: value;` inside `ui!{}`, mevy resolves the field name:
+
+- **Lowercase** field name → calls `my_field(value)` (function call)
+- **Capitalized** field name → calls `MyField::new(value)` (struct `new()` method)
+
+This means your custom field function name determines how it's called.
 
 ## Function-based Custom Fields
 
@@ -29,13 +38,15 @@ fn spawn_glowy_card(mut cmd: Commands) {
     cmd.spawn(ui!((
         size: 200px 150px;
         background: #1a1a2e;
-        neon_border: #00ff00;
-        glow_box: #00ff00;
+        neon_border: #00ff00;   // calls neon_border(#00ff00)
+        glow_box: #00ff00;       // calls glow_box(#00ff00)
         justify_content: center;
         align_items: center;
     )));
 }
 ```
+
+The function name becomes the field name. The value after `:` is passed as the argument.
 
 ## Struct `new()` Method
 
@@ -53,6 +64,8 @@ cmd.spawn(ui!((
 )));
 ```
 
+The field name (capitalized) is treated as a type name, and `:` followed by values calls its `new()` method. This is useful for Bevy's built-in bundles like `Outline`, `BoxShadow`, etc.
+
 ## Edit Function Mode
 
 For mutating existing components, use the edit function mode:
@@ -68,10 +81,12 @@ ui!{
 
 // Usage on existing entities:
 entity!{
-    <world|#HoverTarget>
+    <world|#*HoverTarget.all()>
     into_glow();  // applies the edits
 }
 ```
+
+The edit function mode (`ui!{name{...}}`) defines a function that takes `&mut` references to the components it modifies. The `_` placeholder keeps the existing value for that field.
 
 ## Prefab Pattern
 
@@ -131,9 +146,11 @@ fn spawn_form(mut cmd: Commands) {
 }
 ```
 
+This is the prefab pattern: define a styled element once, call it like a function anywhere. It's the mevy equivalent of CSS classes or UI component libraries.
+
 ## Custom Field with Variables
 
-Use `$var` to pass variables directly:
+Use `$var` to pass variables directly (single identifier only):
 
 ```rust
 let my_image = handle;
@@ -143,3 +160,19 @@ cmd.spawn(ui!((
     image_color: #ff0000;    // hex color
 )));
 ```
+
+The `$` prefix tells mevy to pass the value as-is, without parsing it as a hex color or CSS name.
+
+> [!NOTE]
+> Only single identifiers work with `$` — `$path.to.image` is **not** supported. Use the full path directly: `image: path.to.image;`.
+
+## Limitations
+
+> [!NOTE]
+> Variables can only be used in **custom fields**. Built-in field aliases (like `bg`, `w`, `px`) cannot reference variables directly. This is a known limitation that may be addressed in future versions.
+
+## See Also
+
+- [ui!{} Documentation](macros-ui.md) — All modes including edit function mode
+- [CSS-like Fields](api-ui-fields.md) — Complete field reference
+- [Building a UI](guides-building-a-ui.md) — UI composition patterns

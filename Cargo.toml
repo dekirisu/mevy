@@ -26,7 +26,7 @@ ui = ["dep:mevy_ui"]
 "0.16-rc" = ["mevy_ecs/0.16-rc","mevy_ui?/0.16-rc"]
 "0.16" = ["mevy_ecs/0.16","mevy_ui?/0.16"]
 "0.17" = ["mevy_ecs/0.17","mevy_ui?/0.17"]
-"0.18" = ["mevy_ecs/0.17","mevy_ui?/0.18"]
+"0.18" = ["mevy_ecs/0.18","mevy_ui?/0.18"]
 
 [workspace.dependencies.mevy_core]
 path = "crates/core"

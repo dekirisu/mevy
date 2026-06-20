@@ -1,8 +1,17 @@
 # Building a UI
 
-Learn to compose complex UI layouts with `ui!{}` and `entity!{}`.
+This guide shows how to compose complex UI layouts with `ui!{}` and `entity!{}`. Each example builds on the previous one, showing how the macros work together to create real UI patterns.
+
+> [!TIP]
+> All examples use the dark color palette from the mevy branding. Feel free to adapt the colors to your project.
 
 ## Basic Panel
+
+A panel is a styled container with a title, content area, and action buttons. This example shows the core patterns:
+
+- `ui!{}` creates styled containers (returns a bundle of UI components)
+- `[name][...]` creates named children (referenced by name anywhere)
+- `justify_content` and `align_items` center content within the container
 
 ```rust
 fn spawn_panel(mut cmd: Commands) {
@@ -80,6 +89,12 @@ fn spawn_panel(mut cmd: Commands) {
 
 ## Grid Layout
 
+Grid layouts use `display: grid` and track definitions to create complex multi-column layouts. Key concepts:
+
+- `grid_template_columns/rows` define the grid structure
+- `grid_column: span N` and `grid_row: span N` make items span multiple tracks
+- `1fr` divides remaining space proportionally
+
 ```rust
 fn spawn_grid(mut cmd: Commands) {
     entity!{
@@ -142,9 +157,14 @@ fn spawn_grid(mut cmd: Commands) {
 }
 ```
 
+Key patterns:
+- `grid_template_columns/rows` defines the grid structure
+- `grid_column: span N` and `grid_row: span N` make items span multiple tracks
+- `1fr` divides remaining space proportionally
+
 ## Reusable Components
 
-Define reusable components with `ui!{}` function mode:
+Define reusable components with `ui!{}` function mode. This is like CSS classes or React components — define a styled element once, use it everywhere:
 
 ```rust
 // Define a button prefab
@@ -186,7 +206,11 @@ fn spawn_with_prefabs(mut cmd: Commands) {
 }
 ```
 
+The `?` at the end is optional — any token works. It's just a visual cue that the macro returns a value.
+
 ## Hover Effects
+
+Attach observers directly on entities to create interactive UI. The `> Pointer<Click>` syntax is shorthand for attaching an observer — no separate registration needed:
 
 ```rust
 entity!{
@@ -213,3 +237,14 @@ entity!{
     ]
 }
 ```
+
+Key patterns:
+- `> Pointer<Over>` fires when the pointer enters the entity
+- `> Pointer<Out>` fires when the pointer leaves
+- `this.insert(ui!(...))` replaces the entity's UI components
+
+## See Also
+
+- [ui!{} Documentation](macros-ui.md) — All fields and modes
+- [Custom Fields Guide](guides-custom-fields.md) — Create reusable components
+- [API Reference](api-reference.md) — Complete field reference

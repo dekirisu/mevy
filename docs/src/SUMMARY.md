@@ -17,3 +17,6 @@
   - [Entity Queries](guides-entity-queries.md)
   - [Custom Fields](guides-custom-fields.md)
   - [Bevy Version Compatibility](guides-version-compat.md)
+- [Migration Guide](migration.md)
+- [FAQ](faq.md)
+- [Changelog](changelog.md)

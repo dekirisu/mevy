@@ -1,14 +1,21 @@
 # Macros Overview
 
-mevy provides three core macro families, each solving a different pain point in Bevy development.
+mevy provides three core macro families, each solving a different pain point in Bevy development. They're designed to work together — use `ui!{}` to build UI bundles, `code!{}` for inline values, and `entity!{}` to spawn and manage entities.
 
 ## Quick Reference
 
-| Macro | Purpose | Key Feature |
+| Macro | Purpose | Use when you need... |
 |---|---|---|
-| `code!{}` | Inline value construction | Hex colors, `Val`, `UiRect` |
-| `ui!{}` | CSS-like UI bundles | CSS properties, slim mode |
-| `entity!{}` | Entity spawning & modification | Hierarchy, queries, observers |
+| `code!{}` | Inline value construction | Hex colors, `Val`, `UiRect` without function calls |
+| `ui!{}` | CSS-like UI bundles | Multiple UI components without boilerplate |
+| `entity!{}` | Entity spawning & modification | Hierarchies, queries, and observers in one expression |
+
+## When to Use Which
+
+- **Just a color or value?** → `code!{}`
+- **A styled UI panel?** → `ui!{}`
+- **A complete entity with children?** → `entity!{}`
+- **All three together?** → Use them together. `entity!{}` nests `ui!{}` naturally, and `code!{}` works inside both.
 
 ## How They Work Together
 
@@ -31,6 +38,26 @@ entity!{
         .observe(on_click);
     ]
 }
+```
+
+## Troubleshooting
+
+### "Missing bevy version" compile error
+
+You need to specify the Bevy version feature in `Cargo.toml`:
+
+```toml
+mevy = { version = "0.3", features = ["0.18"] }
+```
+
+See [Installation](installation.md) for the full list of supported versions.
+
+### Experimental features unexpectedly enabled
+
+`mevy_ecs` has `experimental` as a default feature. To disable it:
+
+```toml
+mevy_ecs = { version = "0.2.4", default-features = false }
 ```
 
 ## Navigation
