@@ -1,4 +1,5 @@
-use deki::*;
+use deki::proc::*;
+use deki::core::*;
 
 // \\
 

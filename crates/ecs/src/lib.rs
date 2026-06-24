@@ -1,7 +1,8 @@
 use mevy_ecs_syntax::*;
 use proc_macro::TokenStream as Cokens;
 use TokenStream as Tokens;
-use deki::*;
+use deki::proc::*;
+use deki::core::*;
 
 #[proc_macro]
 pub fn entity(stream:Cokens) -> Cokens {

@@ -1,4 +1,5 @@
-use deki::*;
+use deki::proc::*;
+use deki::core::*;
 use std::iter::zip;
 use syn::LitFloat;
 
@@ -63,7 +64,7 @@ use syn::LitFloat;
                 let [rect,_] = iter.seek_rect_like();
                 match rect {
                     Step::Shift([t,r,b,l]) => {
-                        sandwich!{
+                        compose!{
                             let ^0 = stringify!{^0}.ident_span(l.span());
                             #left #right #top #bottom
                         }
@@ -201,7 +202,7 @@ use syn::LitFloat;
         }
     }
 
-    impl UiTokenTree for Option<&TokenTree> {sandwich!{
+    impl UiTokenTree for Option<&TokenTree> {compose!{
         fn ^0 ^1 {
             exit!{tree = self}
             tree.^0 ^2 

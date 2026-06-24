@@ -58,7 +58,7 @@ default-features = false
 
 
 [workspace.dependencies]
-deki = "0.3.0"
+deki = "0.4.0"
 
 [workspace]
 members = [

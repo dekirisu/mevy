@@ -1,5 +1,7 @@
-use deki::syn::LitInt;
-pub use deki::*;
+pub use deki::core::*;
+pub use deki::core::collections::*;
+pub use deki::proc::*;
+use syn::LitInt;
 pub use mevy_core_syntax::*;
 use std::{f32::consts::PI, iter::zip};
 use syn::LitFloat;
@@ -104,7 +106,7 @@ use syn::LitFloat;
         pub fn get_bundle(&self,after:Option<TokenTree>) -> TokenStream {
             let after = after.map(|a|a.span()).unwrap_or(Span::call_site());
 
-            let defaults = TokenStream::from_iter(self.defaults.keys.iter().map(|s|{
+            let defaults = TokenStream::from_iter(self.defaults.keys().iter().map(|s|{
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 match s.as_str() {
                     "BoxShadow" => {
@@ -118,7 +120,7 @@ use syn::LitFloat;
                     _ => qt!{let mut #var = #typ::default();}
                 }
             }));
-            let bundle = self.variables.keys.iter().map(|s|s.ident());
+            let bundle = self.variables.keys().iter().map(|s|s.ident());
             let out = "bundle".ident_span(after);
             let assign = self.assign.clone();
 
@@ -238,7 +240,7 @@ use syn::LitFloat;
 
     pub fn ui_style_sheet(field:TokenTree,iter:&mut PeekIter) -> UiMap {
         iter.skip_puncts("#-$");
-        let mut map = UiMap::new();
+        let mut map = UiMap::default();
 
         macro_rules! out {
             ($main:ty => $sub:ty [$($ft:tt)*][$($vt:tt)*][$($extra:tt)*])=>{{
@@ -720,7 +722,7 @@ use syn::LitFloat;
 
 // Ui Token \\
 
-    #[derive(Constructor,Clone)]
+    #[derive(New,Clone)]
     pub struct UiToken {
         main: Option<TokenStream>,
         span: Span,
