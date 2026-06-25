@@ -172,6 +172,19 @@ pub fn modify(stream:Cokens) -> Cokens {
         mevy_ecs_syntax::hook(attr.into(),item.into()).into()
     }
 
+    #[cfg(feature="experimental")]
+    #[proc_macro]
+    pub fn corld(item:Cokens) -> Cokens {
+        let tokens: Tokens = item.into();
+        qt!{world.queue(move|world:&mut World|{#tokens});}.into()
+    }
+
+    #[cfg(feature="experimental")]
+    #[proc_macro]
+    pub fn dorld(item:Cokens) -> Cokens {
+        let tokens: Tokens = item.into();
+        qt!{world.commands().queue(move|world:&mut World|{#tokens});}.into()
+    }
 
 // Spawners Helper \|
 
