@@ -1,3 +1,4 @@
+use deki::proc::syn::parse2;
 use deki::proc::*;
 use deki::core::*;
 
@@ -670,5 +671,64 @@ use deki::core::*;
     fn compile_error_no_version() -> TokenStream {
         qt!{compile_error!{"Mevy: Missing bevy version!: Specify it in Cargo.toml! e.g. feature=[\"0.15\"])"}}
     }
+
+// \\
+
+    #[cfg(feature="experimental")]
+    pub fn hook (attr:TokenStream, item:TokenStream) -> TokenStream {
+        let mut fnc: syn::ItemFn = parse2(item).unwrap();
+        let inputs = std::mem::take(&mut fnc.sig.inputs);
+        fnc.sig.inputs.push(parse2(qt!(mut world: bevy::ecs::world::DeferredWorld)).unwrap());
+        fnc.sig.inputs.push(parse2(qt!(ctx: bevy::ecs::lifecycle::HookContext)).unwrap());
+        let pre = hook_resolve(inputs.into_iter().map(|a|a.into_token_stream()).collect());
+        let block = fnc.block;
+        fnc.block = Box::new(parse2(qt!{{
+            let me = ctx.entity;
+            #pre
+            #block
+        }}).unwrap());
+        let fnc = fnc.to_token_stream();
+        match attr.is_empty() {
+            true => fnc.into(),
+            _ => imp(attr.into(),fnc.into()).into()
+        }
+    }
+
+    #[cfg(feature="experimental")]
+    fn hook_resolve(split:Vec<TokenStream>) -> TokenStream {
+        let mut out = qt!{};
+        for attr in split {
+            let iter = attr.peek_iter();
+            let split = iter.split_punct(':');
+
+            let mut var = split.get(0).unwrap().clone().peek_iter();
+            let self_ref = var.next_if(|a|a.is_punct('&')).is_some();
+            let self_ref_mut = self_ref && var.next_if(|a|a.is_string("mut")).is_some();
+            let var = TokenStream::from_iter(var.map(|a|
+                if a.is_string("self"){TokenTree::Ident("salf".ident_span(a.span()))} else {a}
+            ));
+
+            let mut typ = split.get(1).cloned().unwrap_or(qt!{Self}).peek_iter();
+            let typ_ref = typ.next_if(|a|a.is_punct('&')).is_some();
+            let typ_ref_mut = typ_ref && typ.next_if(|a|a.is_string("mut")).is_some();
+            let typ = TokenStream::from_iter(typ);
+
+            let is_ref = self_ref || typ_ref;
+            let is_mut = self_ref_mut || typ_ref_mut;
+
+            let clone = if is_ref {qt!()} else {
+                qt!(let #var = #var.clone();)
+            };
+
+            let get = if is_mut {qt!{get_mut}} else {qt!{get}};
+            let mot = if is_mut {qt!{mut}} else {qt!{}};
+            out.extend(qt!{
+                let Some(#mot #var) = world.#get::<#typ>(me) else {return};
+                #clone
+            });
+        }
+        out
+    }
+
 
 // EOF \\

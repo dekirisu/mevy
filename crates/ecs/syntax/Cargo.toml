@@ -18,6 +18,7 @@ features = ["proc"]
 
 [features]
 default = []
+experimental = []
 "0.15" = []
 "0.16" = []
 "0.16-rc" = ["0.16"]

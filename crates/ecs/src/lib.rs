@@ -157,13 +157,19 @@ pub fn modify(stream:Cokens) -> Cokens {
     /// - `cen![&..]`: edit a `me: Entity`
     /// - `cen![*..]: edit a `world: EntityWorldMut`
     /// - `cen![#Marker|..]: edit all Entities with `Marker` component
-     #[proc_macro]
+    #[proc_macro]
     pub fn cen(stream:Cokens) -> Cokens {
         let stream: Tokens = stream.into();
         let mut iter = stream.peek_iter();
         let dir = en_translate(qt![],&mut iter);
         let stream = Tokens::from_iter(iter);
         mevy_ecs_syntax::world_spawn_syntax(qt!(#dir #stream)).into()
+    }
+
+    #[cfg(feature="experimental")]
+    #[proc_macro_attribute]
+    pub fn hook(attr:Cokens,item:Cokens) -> Cokens {
+        mevy_ecs_syntax::hook(attr.into(),item.into()).into()
     }
 
 
