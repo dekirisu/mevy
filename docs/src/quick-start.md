@@ -7,7 +7,7 @@ This guide walks you through mevy's three macro families, from setup to a workin
 Add mevy to your `Cargo.toml` with your Bevy version:
 
 ```toml
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 Then import everything:

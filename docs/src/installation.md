@@ -5,7 +5,7 @@
 ```toml
 [dependencies]
 bevy = { version = "0.18", features = ["ui"] }
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 Then import everything at once:
@@ -45,7 +45,7 @@ The `experimental` feature is unstable — the API may change between versions w
 
 ```toml
 # With experimental features
-mevy = { version = "0.3", features = ["0.18", "experimental"] }
+mevy = { version = "0.4", features = ["0.18", "experimental"] }
 ```
 
 ## Using Crates Separately
@@ -54,8 +54,8 @@ You can also use individual crates if you only need specific macros:
 
 ```toml
 [dependencies]
-mevy_core = { version = "0.1.1", features = ["0.18"] }  # code!{} only
-mevy_ui   = { version = "0.3.2", features = ["0.18"] }  # ui!{} only
+mevy_core = { version = "0.2.0", features = ["0.18"] }  # code!{} only
+mevy_ui   = { version = "0.4.0", features = ["0.18"] }  # ui!{} only
 ```
 
 ```rust

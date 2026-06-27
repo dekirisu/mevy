@@ -6,7 +6,7 @@
 ## Enable the Feature
 
 ```toml
-mevy = { version = "0.3", features = ["0.18", "experimental"] }
+mevy = { version = "0.4", features = ["0.18", "experimental"] }
 ```
 
 These helpers are useful for prototyping and daily development. They solve common patterns with minimal syntax, but since they're experimental, their behavior may change.

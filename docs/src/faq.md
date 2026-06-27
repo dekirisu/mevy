@@ -11,7 +11,7 @@ No. Specify only the Bevy version feature (e.g., `features = ["0.18"]`). The `ui
 mevy supports Bevy 0.15 through 0.18. You **must** pin your Bevy version in `Cargo.toml`:
 
 ```toml
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 Without a version feature, compilation will fail with a `compile_error`.
@@ -33,9 +33,9 @@ No. Experimental features are unstable and may change without notice. The core m
 Yes:
 
 ```toml
-mevy_core = { version = "0.1.1", features = ["0.18"] }
-mevy_ui   = { version = "0.3.2", features = ["0.18"] }
-mevy_ecs  = { version = "0.2.4", features = ["0.18"] }
+mevy_core = { version = "0.2.0", features = ["0.18"] }
+mevy_ui   = { version = "0.4.0", features = ["0.18"] }
+mevy_ecs  = { version = "0.3.0", features = ["0.18"] }
 ```
 
 ```rust

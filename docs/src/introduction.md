@@ -76,7 +76,7 @@ Write `#ff0000` for a color, `100px` for a value, `[>10px 5px]` for a rectangle.
 mevy supports Bevy 0.15 through 0.18. You **must** pin your version in `Cargo.toml`:
 
 ```toml
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 ## Quick Links

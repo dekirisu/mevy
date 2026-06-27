@@ -23,16 +23,16 @@ A **growing** set of **m**acros which add some witchcraft into b**evy**, current
 Multiple bevy versions are supported and managed by features:
 ```toml
 # bevy 0.18
-mevy = {version="0.3",features=["0.18"]}
+mevy = {version="0.4",features=["0.18"]}
 
 # bevy 0.17
-mevy = {version="0.3",features=["0.17"]}
+mevy = {version="0.4",features=["0.17"]}
 
 # bevy 0.16
-mevy = {version="0.3",features=["0.16"]}
+mevy = {version="0.4",features=["0.16"]}
 
 # bevy 0.15
-mevy = {version="0.3",features=["0.15"]}
+mevy = {version="0.4",features=["0.15"]}
 ```
 
 Then just `use` all of it:

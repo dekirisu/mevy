@@ -47,7 +47,7 @@ entity!{
 You need to specify the Bevy version feature in `Cargo.toml`:
 
 ```toml
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 See [Installation](installation.md) for the full list of supported versions.
@@ -57,7 +57,7 @@ See [Installation](installation.md) for the full list of supported versions.
 `mevy_ecs` has `experimental` as a default feature. To disable it:
 
 ```toml
-mevy_ecs = { version = "0.2.4", default-features = false }
+mevy_ecs = { version = "0.3.0", default-features = false }
 ```
 
 ## Navigation

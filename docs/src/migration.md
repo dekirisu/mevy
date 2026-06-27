@@ -6,7 +6,7 @@ This guide helps you migrate between Bevy versions when using mevy. The key prin
 
 Update your `Cargo.toml`:
 ```toml
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 All `entity!{}` features work with Bevy 0.18.
@@ -20,7 +20,7 @@ API differences mevy handles automatically (for `mevy_ui` and `mevy_core`):
 
 Update your `Cargo.toml`:
 ```toml
-mevy = { version = "0.3", features = ["0.17"] }
+mevy = { version = "0.4", features = ["0.17"] }
 ```
 
 No code changes needed. Key changes mevy handles automatically:
@@ -31,7 +31,7 @@ No code changes needed. Key changes mevy handles automatically:
 
 Update your `Cargo.toml`:
 ```toml
-mevy = { version = "0.3", features = ["0.16"] }
+mevy = { version = "0.4", features = ["0.16"] }
 ```
 
 No code changes needed. Key changes mevy handles automatically:
@@ -43,7 +43,7 @@ No code changes needed. Key changes mevy handles automatically:
 
 Update your `Cargo.toml`:
 ```toml
-mevy = { version = "0.3", features = ["0.15"] }
+mevy = { version = "0.4", features = ["0.15"] }
 ```
 
 No code changes needed. Key differences in Bevy 0.15:

@@ -2,6 +2,23 @@
 
 All notable changes to mevy are documented here.
 
+## [0.4.0] — 2026-06-27
+
+### Changed
+- Bumped all crate versions to resolve `deki_proc` version conflict (0.1.x vs 0.3.x)
+- `mevy_core_syntax` 0.2.4 → 0.3.0
+- `mevy_ecs_syntax` 0.2.5 → 0.3.0
+- `mevy_ui_syntax` 0.4.4 → 0.5.0
+- `mevy_core` 0.1.1 → 0.2.0
+- `mevy_ecs` 0.2.5 → 0.3.0
+- `mevy_ui` 0.3.3 → 0.4.0
+- `mevy` 0.3.2 → 0.4.0
+
+### Fixed
+- Clippy warnings (`single_match`, `collapsible_if`, `filter_next`, `match_like_matches_macro`, `type_complexity`, `too_many_arguments`, `get_first`, `map_flatten`, `let_and_return`, `useless_conversion`, `useless_imports`, `unwrap_or_default`, `dead_code`)
+
+---
+
 ## [0.3.2] — 2026-06-20
 
 ### Added
@@ -64,7 +81,8 @@ All notable changes to mevy are documented here.
 
 See [Migration Guide](migration.md) for details on migrating between Bevy versions.
 
-[Unreleased]: https://github.com/dekirisu/mevy/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/dekirisu/mevy/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/dekirisu/mevy/releases/tag/v0.4.0
 [0.3.2]: https://github.com/dekirisu/mevy/releases/tag/v0.3.2
 [0.3.1]: https://github.com/dekirisu/mevy/releases/tag/v0.3.1
 [0.3.0]: https://github.com/dekirisu/mevy/releases/tag/v0.3.0

@@ -12,7 +12,7 @@ You **must** specify the Bevy version feature:
 
 ```toml
 [dependencies]
-mevy = { version = "0.3", features = ["0.18"] }
+mevy = { version = "0.4", features = ["0.18"] }
 ```
 
 ## What Stays the Same
