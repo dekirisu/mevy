@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: cargo build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo build (workspace)
+        run: cargo build --workspace --no-default-features --features 0.18
+      - name: cargo build (examples)
+        run: cargo build --examples
+
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo test (workspace)
+        run: cargo test --workspace --no-default-features --features 0.18
+      - name: cargo test (examples)
+        run: cargo test --examples
+
+  clippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: clippy
+        run: cargo clippy --workspace --no-default-features --features 0.18 -- -D warnings
