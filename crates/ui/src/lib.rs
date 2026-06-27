@@ -8,7 +8,7 @@ use proc_macro::TokenStream as CompilerTokens;
     ///
     /// ## Available fields
     /// To see a full list of built-in fields, see readme of mevy_ui, here are some examples:
-    /// ```rust 
+    /// ```rust,ignore
     /// cmd.spawn(ui!((
     ///     size: 50px 50px;
     ///     background: #ff0000;
@@ -17,7 +17,7 @@ use proc_macro::TokenStream as CompilerTokens;
     /// )));
     /// ```
     /// The same, but 'slim':
-    /// ```rust
+    /// ```rust,ignore
     /// cmd.spawn(ui!( w:50 h:50 bg:#f00 shadow:0+0+5+5#f00 border:5#0f0 ));
     /// ```
     ///

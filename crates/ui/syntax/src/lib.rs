@@ -195,6 +195,7 @@ use syn::LitFloat;
 
                 // \|
                 "line_height": "leading";
+
                 "font_size": "text_size";
                 "box_shadow": "shadow";
                 "flex_direction": "flex";
@@ -210,9 +211,11 @@ use syn::LitFloat;
                 "z_index": "zindex" "z";
                 "z_global": "zg";
                 "relative_cursor_position": "cursor_position" "cursor_pos";
+
                 "focus_policy": "focus";
                 "scroll_position": "scroll";
                 "image": "img";
+
                 "image_color": "img_color";
 
             }
@@ -284,8 +287,10 @@ use syn::LitFloat;
             }
 
            "inherit" => {
-                let posi = qts![field.span()=>Visibility::Inherit];
-                out!{Visibility => _ [][#posi] [None]}
+                #[cfg(not(feature="0.18"))]
+                out!{Visibility => _ [][Visibility::Inherit] [None]}
+                #[cfg(feature="0.18")]
+                out!{Visibility => _ [][Visibility::Inherited] [None]}
             }
 
 
@@ -480,7 +485,10 @@ use syn::LitFloat;
             "justify_text" => {
                 let var = iter.next().unwrap_or("Left".ident().into());
                 let var = var.unwrap_ident().to_case(Case::Pascal);
+                #[cfg(not(feature="0.18"))]
                 out!{TextLayout => _ [.justify][JustifyText::#var] [None]}
+                #[cfg(feature="0.18")]
+                out!{TextLayout => _ [.justify][Justify::#var] [None]}
             }
 
             "line_break" => {
@@ -643,7 +651,7 @@ use syn::LitFloat;
             }
 
             "display"|"position_type"|"align_items"|"justify_items"|"align_self"|"justify_self"|
-            "align_content"|"justify_content"|"flex_direction"|"flex_wrap"|"grid_auto_flow" => {
+            "align_content"|"justify_content"|"flex_direction"|"flex_wrap"|"grid_auto_flow"|"box_sizing" => {
                 let enu = field.clone().to_case(Case::Pascal);
                 kill!{val = iter.next(),unwrap_ident().to_case(Case::Pascal)}
                 out!{Node => _ [.#field][#enu::#val] [None]}
@@ -654,7 +662,7 @@ use syn::LitFloat;
                 out!{Node => f32 [.#field][Some(#val as f32)] [None]}
             }
 
-            "flex_grow"|"flex_shrink" => {
+            "flex_grow"|"flex_shrink"|"scrollbar_width" => {
                 kill!{val = iter.next()}
                 out!{Node => f32 [.#field][#val as f32] [None]}
             }
