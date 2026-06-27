@@ -2,6 +2,7 @@ use mevy_ecs_syntax::*;
 use proc_macro::TokenStream as Cokens;
 use TokenStream as Tokens;
 use deki::proc::*;
+#[allow(unused_imports)]
 use deki::core::*;
 
 #[proc_macro]
@@ -84,7 +85,7 @@ pub fn modify(stream:Cokens) -> Cokens {
             '*' => qt![.cloned()],
             _ => qt![]
         };
-        let get = match stream.get(0) {
+        let get = match stream.first() {
             Some(t) if t.is_string("mut") => {
                 stream.remove(0);
                 qt![get_mut]
@@ -98,7 +99,7 @@ pub fn modify(stream:Cokens) -> Cokens {
             },
             _ => qt![me]
         };
-        let comp = Tokens::from_iter(stream.into_iter()); 
+        let comp = Tokens::from_iter(stream); 
         qt!{world.#get::<#comp>(#enty)#post}.into()
     }
 

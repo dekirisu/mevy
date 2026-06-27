@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use deki::*;
 use mevy_ui_syntax::*;
 use proc_macro::TokenStream as CompilerTokens;

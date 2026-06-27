@@ -62,28 +62,26 @@ use syn::LitFloat;
             let mut iter = group.stream().peek_iter();
             if iter.next_if(|a|a.is_punct('>')).yay() {        
                 let [rect,_] = iter.seek_rect_like();
-                match rect {
-                    Step::Shift([t,r,b,l]) => {
-                        compose!{
-                            let ^0 = stringify!{^0}.ident_span(l.span());
-                            #left #right #top #bottom
-                        }
-                        let tok = qt!{UiRect{
-                            #top:    Val::#t,
-                            #right:  Val::#r,
-                            #bottom: Val::#b,
-                            #left:   Val::#l,
-                        }};
-                        return Step::Shift(tok);
-                    } _ => {}
+                if let Step::Shift([t,r,b,l]) = rect {
+                    compose!{
+                        let ^0 = stringify!{^0}.ident_span(l.span());
+                        #left #right #top #bottom
+                    }
+                    let tok = qt!{UiRect{
+                        #top:    Val::#t,
+                        #right:  Val::#r,
+                        #bottom: Val::#b,
+                        #left:   Val::#l,
+                    }};
+                    return Step::Shift(tok);
                 }
             }
         } 
 
-        if next.is_punct('#') {
-            if let Some(out) = iter.next_hex_color() {
-                return Step::Shift(out.0);
-            }
+        if next.is_punct('#')
+            && let Some(out) = iter.next_hex_color()
+        {
+            return Step::Shift(out.0);
         }
 
         Step::Base(next)
@@ -122,6 +120,7 @@ use syn::LitFloat;
         }
 
         /// get a rect by valid upcoming tokens - or a default one
+        #[allow(clippy::type_complexity)]
         fn seek_rect_like(&mut self) -> [Step<(Option<Punct>,Literal),[TokenStream;4]>;2] {
             let mut rect = vec![];
             let mut last = Step::None;
@@ -171,11 +170,7 @@ use syn::LitFloat;
 // Token Handling \\
 
     fn hex_check(text:&str) -> bool {
-        text.to_lowercase().chars().filter(|a|match a {
-            '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|
-            '8'|'9'|'a'|'b'|'c'|'d'|'e'|'f' => false,
-            _ => true
-        }).next().is_none()
+        text.to_lowercase().chars().all(|c| c.is_ascii_hexdigit())
     }
 
     #[ext(pub trait UiTokenTree)]

@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use deki::proc::syn::parse2;
 use deki::proc::*;
 use deki::core::*;
@@ -37,7 +38,7 @@ use deki::core::*;
             }
             let streams = streams.as_ref().unwrap();
             let entity = streams.get(1).map(|a|if a.is_empty(){qt!{me}} else {a.clone()});
-            let out = match streams.get(0) {
+            match streams.first() {
                 None => Self::EntityCommands{entry:qt!{this}},
                 Some(a) if a.is_empty() => Self::Commands{entry:qt!{world},entity},
                 Some(a) => {
@@ -70,8 +71,7 @@ use deki::core::*;
                         _ => Self::Commands{entry:a.clone(),entity}
                     }
                 }
-            };
-            out
+            }
         }
 
         pub fn get_entity(&self) -> Option<TokenStream> {match self {
@@ -373,15 +373,11 @@ use deki::core::*;
         let mut on_world_block = qt!{};
 
         let wentry = WorldEntry::from_tokens(&angled);
-        let mut exec_on_world = match wentry {
-            WorldEntry::World{entry:_,entity:_}
-            | WorldEntry::ChildBuilder{entry:_} 
-            | WorldEntry::EntityWorldMut { entry:_ }
-            => true,
-            _ => false
-        };
+        let mut exec_on_world = matches!(wentry, WorldEntry::World{entry:_,entity:_}
+            | WorldEntry::ChildBuilder{entry:_}
+            | WorldEntry::EntityWorldMut { entry:_ });
 
-        if let Some((winit,forced)) = world_entity_init(angled.as_ref().map(|a|a.get(1)).flatten()) {
+        if let Some((winit,forced)) = world_entity_init(angled.as_ref().and_then(|a|a.get(1))) {
             on_world.extend(winit);
             is_forced = forced;
             exec_on_world = true;
@@ -443,6 +439,7 @@ use deki::core::*;
  
 // Recursion \\
 
+    #[allow(clippy::too_many_arguments)]
     fn world_spawn_syntax_recursive(
         stream: TokenStream,
         span: Span,
@@ -668,6 +665,7 @@ use deki::core::*;
     }
 
 
+    #[allow(dead_code)]
     fn compile_error_no_version() -> TokenStream {
         qt!{compile_error!{"Mevy: Missing bevy version!: Specify it in Cargo.toml! e.g. feature=[\"0.15\"])"}}
     }
@@ -688,10 +686,7 @@ use deki::core::*;
             #block
         }}).unwrap());
         let fnc = fnc.to_token_stream();
-        match attr.is_empty() {
-            true => fnc.into(),
-            _ => imp(attr.into(),fnc.into()).into()
-        }
+        if attr.is_empty() { fnc } else { imp(attr,fnc) }
     }
 
     #[cfg(feature="experimental")]
@@ -701,7 +696,7 @@ use deki::core::*;
             let iter = attr.peek_iter();
             let split = iter.split_punct(':');
 
-            let mut var = split.get(0).unwrap().clone().peek_iter();
+            let mut var = split.first().unwrap().clone().peek_iter();
             let self_ref = var.next_if(|a|a.is_punct('&')).is_some();
             let self_ref_mut = self_ref && var.next_if(|a|a.is_string("mut")).is_some();
             let var = TokenStream::from_iter(var.map(|a|

@@ -324,39 +324,37 @@ use syn::LitFloat;
                 });
                 let mut vec = iter.collect::<Vec<_>>();
                 let mut extra = None;
-                if let Some(TokenTree::Group(grp)) = vec.last() {
-                    if grp.delimiter().is_bracket(){
-                        extra = Some(grp.stream()); 
-                        vec.pop();
-                    }
+                if let Some(TokenTree::Group(grp)) = vec.last()
+                    && grp.delimiter().is_bracket()
+                {
+                    extra = Some(grp.stream()); 
+                    vec.pop();
                 }
                 let token = TokenStream::from_iter(vec); 
                 out!{Transform => Quat [.rotation][Quat::from_rotation_z(#token)] [extra]}
             }
 
-            "font_color" => match iter.try_into_color().prepare() {
-                Some((color,_,extra)) => out!{TextColor => Color [.0][#color] [extra]},
-            _=>()}
+            "font_color" => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
+                out!{TextColor => Color [.0][#color] [extra]}
+            }
 
             "font_size" => {
                 kill!{val = iter.next()}
                 out!{TextFont => f32 [.#field][#val as f32] [None]}
             }
 
-            "background_color" => match iter.try_into_color().prepare() {
-                Some((color,_,extra)) => out!{BackgroundColor => Color [.0][#color] [extra]},
-            _=>()}
+            "background_color" => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
+                out!{BackgroundColor => Color [.0][#color] [extra]}
+            }
 
-            "border_color" => match iter.try_into_color().prepare() {
-                Some((color,_,extra)) => {
-                    #[cfg(not(any(feature="0.17",feature="0.18")))]
-                    out!{BorderColor => Color [.0][#color] [extra]}
-                    #[cfg(any(feature="0.17",feature="0.18"))]
-                    for a in qar!([top][right][bottom][left]){
-                        out!{BorderColor => Color [.#a][#color] [extra.clone()]}
-                    }
+            "border_color" => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
+                #[cfg(not(any(feature="0.17",feature="0.18")))]
+                out!{BorderColor => Color [.0][#color] [extra]}
+                #[cfg(any(feature="0.17",feature="0.18"))]
+                for a in qar!([top][right][bottom][left]){
+                    out!{BorderColor => Color [.#a][#color] [extra.clone()]}
                 }
-            _=>()}
+            }
 
             "border_radius" => {
                 let vals = iter.into_rect_like(true);
@@ -524,23 +522,21 @@ use syn::LitFloat;
                     exit!{var = iter.next(),inner_tokens()}
                     out!{ImageNode => _ [.image][#var] [None]}
                 },
-                '#' => match iter.try_into_color().prepare() {
-                    Some((color,_,extra)) => out!{ImageNode => Color [.color][#color] [extra]},
-                    _ => ()
+                '#' => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
+                    out!{ImageNode => Color [.color][#color] [extra]}
                 }
-                _ => match iter.next() {
-                    Some(t) => match t.to_string().as_str() {
+                _ => if let Some(t) = iter.next() {
+                    match t.to_string().as_str() {
                         "flip_y" => out!{ImageNode => _ [.flip_y][true] [None]},
                         "flip_x" => out!{ImageNode => _ [.flip_x][true] [None]},
                         _ => {}
                     }
-                    _ => {}
                 }
             }
 
-            "image_color" => match iter.try_into_color().prepare() {
-                Some((color,_,extra)) => out!{ImageNode => Color [.color][#color] [extra]},
-            _=>()}
+            "image_color" => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
+                out!{ImageNode => Color [.color][#color] [extra]}
+            }
 
 
 // Custom Groups \\
@@ -744,7 +740,7 @@ use syn::LitFloat;
         fn prepare(self) -> Option<(TokenStream,Span,Option<TokenStream>)> {
             match (self.main.yay(),self.extra.yay()) {
                 (true,_) => Some((self.main.unwrap(),self.span,self.extra)),
-                (_,true) => Some((self.main.unwrap_or(qt!{}),self.span,self.extra)),
+                (_,true) => Some((self.main.unwrap_or_default(),self.span,self.extra)),
                 _ => None
             }
         }
@@ -1036,6 +1032,7 @@ use syn::LitFloat;
         }
     }
 
+    #[allow(dead_code)]
     fn compile_error_no_version() -> TokenStream {
         qt!{compile_error!{"Mevy: Missing bevy version!: Specify it in Cargo.toml! e.g. feature=[\"0.15\"])"}}
     }
