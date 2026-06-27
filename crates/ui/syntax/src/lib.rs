@@ -110,11 +110,11 @@ use syn::LitFloat;
                 let (var,typ) = (s.to_case(Case::Snake).ident(),s.ident());
                 match s.as_str() {
                     "BoxShadow" => {
-                        #[cfg(any(feature="0.16",feature="0.17",feature="0.18"))]
+                        #[cfg(any(feature="0.16",feature="0.17",feature="0.18",feature="0.19"))]
                         qt!{let mut #var = BoxShadow(vec![ShadowStyle::default()]);}
                         #[cfg(feature="0.15")]
                         qt!{let mut #var = #typ::default();}
-                        #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18")))]
+                        #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18",feature="0.19")))]
                         compile_error_no_version()
                     }
                     _ => qt!{let mut #var = #typ::default();}
@@ -287,9 +287,9 @@ use syn::LitFloat;
             }
 
            "inherit" => {
-                #[cfg(not(feature="0.18"))]
+                #[cfg(not(any(feature="0.18",feature="0.19")))]
                 out!{Visibility => _ [][Visibility::Inherit] [None]}
-                #[cfg(feature="0.18")]
+                #[cfg(any(feature="0.18",feature="0.19"))]
                 out!{Visibility => _ [][Visibility::Inherited] [None]}
             }
 
@@ -340,7 +340,10 @@ use syn::LitFloat;
 
             "font_size" => {
                 kill!{val = iter.next()}
+                #[cfg(not(feature = "0.19"))]
                 out!{TextFont => f32 [.#field][#val as f32] [None]}
+                #[cfg(feature = "0.19")]
+                out!{TextFont => FontSize [.#field][FontSize::Px(#val as f32)] [None]}
             }
 
             "background_color" => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
@@ -348,9 +351,9 @@ use syn::LitFloat;
             }
 
             "border_color" => if let Some((color,_,extra)) = iter.try_into_color().prepare() {
-                #[cfg(not(any(feature="0.17",feature="0.18")))]
+                #[cfg(not(any(feature="0.17",feature="0.18",feature="0.19")))]
                 out!{BorderColor => Color [.0][#color] [extra]}
-                #[cfg(any(feature="0.17",feature="0.18"))]
+                #[cfg(any(feature="0.17",feature="0.18",feature="0.19"))]
                 for a in qar!([top][right][bottom][left]){
                     out!{BorderColor => Color [.#a][#color] [extra.clone()]}
                 }
@@ -362,9 +365,9 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,vals) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
-                    #[cfg(not(feature="0.18"))]
+                    #[cfg(not(any(feature="0.18",feature="0.19")))]
                     out!{BorderRadius => Val [.#field][#val] [oval.extra]}
-                    #[cfg(feature="0.18")]
+                    #[cfg(any(feature="0.18",feature="0.19"))]
                     out!{Node => Val [.border_radius.#field][#val] [oval.extra]}
                 }
             }
@@ -402,11 +405,11 @@ use syn::LitFloat;
                 for (field,oval) in zip(fields,iter.into_vals()) {
                     next!{val = oval.main}
                     let field = field.with_span(oval.span);
-                    #[cfg(any(feature="0.16",feature="0.17",feature="0.18"))]
+                    #[cfg(any(feature="0.16",feature="0.17",feature="0.18",feature="0.19"))]
                     out!{BoxShadow => Val [[0].#field][#val] [oval.extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Val [.#field][#val] [oval.extra]}
-                    #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18")))]
+                    #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18",feature="0.19")))]
                     {
                         let err = compile_error_no_version();
                         out!{BoxShadow => Val [;][#err] [None]}
@@ -414,11 +417,11 @@ use syn::LitFloat;
                 }
                 if let Some((color,span,extra)) = iter.try_into_color().prepare() {
                     let field = "color".ident_span(span);
-                    #[cfg(any(feature="0.16",feature="0.17",feature="0.18"))]
+                    #[cfg(any(feature="0.16",feature="0.17",feature="0.18",feature="0.19"))]
                     out!{BoxShadow => Color [[0].#field][#color] [extra]}
                     #[cfg(feature="0.15")]
                     out!{BoxShadow => Color [.#field][#color] [extra]}
-                    #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18")))]
+                    #[cfg(not(any(feature="0.15",feature="0.16",feature="0.17",feature="0.18",feature="0.19")))]
                     {
                         let err = compile_error_no_version();
                         out!{BoxShadow => Color [;][#err] [None]}
@@ -458,9 +461,9 @@ use syn::LitFloat;
                 if vals.is_empty(){
                     map.entry("ScrollPosition");
                 } else {
-                    #[cfg(not(any(feature="0.17",feature="0.18")))]
+                    #[cfg(not(any(feature="0.17",feature="0.18",feature="0.19")))]
                     let fields = qar!([x_offset][y_offset]);
-                    #[cfg(any(feature="0.17",feature="0.18"))]
+                    #[cfg(any(feature="0.17",feature="0.18",feature="0.19"))]
                     let fields = qar!([x][y]);
                     for (field,oval) in zip(fields,iter.into_vals()) {
                         next!{val = oval.main}
@@ -474,18 +477,18 @@ use syn::LitFloat;
 
             "line_height" => {
                 kill!{val = iter.next()}
-                #[cfg(not(feature="0.18"))]
+                #[cfg(not(any(feature="0.18",feature="0.19")))]
                 out!{TextFont => _ [.line_height][bevy::text::LineHeight::RelativeToFont(#val as f32)] [None]}
-                #[cfg(feature="0.18")]
+                #[cfg(any(feature="0.18",feature="0.19"))]
                 out!{LineHeight => _ [][LineHeight::RelativeToFont(#val as f32)] [None]}
             }
 
             "justify_text" => {
                 let var = iter.next().unwrap_or("Left".ident().into());
                 let var = var.unwrap_ident().to_case(Case::Pascal);
-                #[cfg(not(feature="0.18"))]
+                #[cfg(not(any(feature="0.18",feature="0.19")))]
                 out!{TextLayout => _ [.justify][JustifyText::#var] [None]}
-                #[cfg(feature="0.18")]
+                #[cfg(any(feature="0.18",feature="0.19"))]
                 out!{TextLayout => _ [.justify][Justify::#var] [None]}
             }
 
@@ -498,7 +501,10 @@ use syn::LitFloat;
             "text" => match iter.peek().unwrap().clone() {
                 TokenTree::Literal(val) => {
                     iter.next();
+                    #[cfg(not(feature = "0.19"))]
                     out!{TextFont => f32 [.font_size][#val as f32] [None]}
+                    #[cfg(feature = "0.19")]
+                    out!{TextFont => FontSize [.font_size][FontSize::Px(#val as f32)] [None]}
                 }
                 _ => {
                     let var = iter.next().unwrap_or("WordBoundary".ident().into());
@@ -506,9 +512,9 @@ use syn::LitFloat;
                     match var.to_string().as_str() {
                         "Left"|"Center"|"Right"|"Justified"
                             => {
-                                #[cfg(any(feature="0.17",feature="0.18"))]
+                                #[cfg(any(feature="0.17",feature="0.18",feature="0.19"))]
                                 out!{TextLayout => _ [.justify][Justify::#var] [None]}
-                                #[cfg(not(any(feature="0.17",feature="0.18")))]
+                                #[cfg(not(any(feature="0.17",feature="0.18",feature="0.19")))]
                                 out!{TextLayout => _ [.justify][JustifyText::#var] [None]}
                             },
                         _   => out!{TextLayout => _ [.linebreak][LineBreak::#var] [None]}
@@ -617,12 +623,18 @@ use syn::LitFloat;
                     0 => out!{Node => _ [.#field][OverflowClipMargin::DEFAULT] [None]},
                     1 => {
                         kill!{vbox = vecy.pop(),unwrap_ident().to_case(Case::Pascal)}
+                        #[cfg(not(feature = "0.19"))]
                         out!{Node => _ [.#field.visual_box][OverflowClipBox::#vbox] [None]}
+                        #[cfg(feature = "0.19")]
+                        out!{Node => _ [.#field.visual_box][VisualBox::#vbox] [None]}
                     }
                     _ => {
                         kill!{marg = vecy.pop()}
                         kill!{vbox = vecy.pop(),unwrap_ident().to_case(Case::Pascal)}
+                        #[cfg(not(feature = "0.19"))]
                         out!{Node => _ [.#field.visual_box][OverflowClipBox::#vbox] [None]}
+                        #[cfg(feature = "0.19")]
+                        out!{Node => _ [.#field.visual_box][VisualBox::#vbox] [None]}
                         out!{Node => f32 [.#field.margin][#marg as f32] [None]}
                     }
                 };
@@ -672,9 +684,9 @@ use syn::LitFloat;
                     out!{Node => Val [.#field.#field2] [#val] [oval.extra]}
                 }
                 if let Some((color,_,extra)) = iter.try_into_color().prepare() {
-                    #[cfg(not(any(feature="0.17",feature="0.18")))]
+                    #[cfg(not(any(feature="0.17",feature="0.18",feature="0.19")))]
                     out!{BorderColor => Color [.0][#color] [extra]}
-                    #[cfg(any(feature="0.17",feature="0.18"))]
+                    #[cfg(any(feature="0.17",feature="0.18",feature="0.19"))]
                     for a in qar!([top][right][bottom][left]){
                         out!{BorderColor => Color [.#a][#color] [extra.clone()]}
                     }
@@ -718,6 +730,28 @@ use syn::LitFloat;
                 out!{Node => Val [.#field][#val] [extra]}
             }
 
+            // --- 0.19 fields ---
+            #[cfg(feature = "0.19")]
+            "edit" => {
+                map.entry("EditableText");
+            }
+            #[cfg(feature = "0.19")]
+            "direction" => {
+                let var = iter.next().unwrap_or("Ltr".ident().into());
+                let var = var.unwrap_ident().to_case(Case::Pascal);
+                out!{Node => _ [.direction][bevy::ui::InlineDirection::#var] [None]}
+            }
+            #[cfg(feature = "0.19")]
+            "font_source" => {
+                let var = iter.next().unwrap_or("SansSerif".ident().into());
+                let var = var.unwrap_ident().to_case(Case::Pascal);
+                out!{TextFont => FontSource [.font][bevy::text::FontSource::#var] [None]}
+            }
+            #[cfg(feature = "0.19")]
+            "letter_spacing" => {
+                let val = iter.next().unwrap_or(TokenTree::Literal(Literal::f32_suffixed(0.0)));
+                out!{LetterSpacing => _ [][bevy::text::LetterSpacing::Px(#val as f32)] [None]}
+            }
             _ => {}
         }
         map

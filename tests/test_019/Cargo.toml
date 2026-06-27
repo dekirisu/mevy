@@ -1,5 +1,5 @@
 [package]
-name = "test_018"
+name = "test_019"
 version = "0.0.0"
 edition = "2024"
 publish = false
@@ -7,12 +7,12 @@ publish = false
 [workspace]
 
 [dependencies]
-bevy = { version = "0.18", default-features = false, features = [
+bevy = { version = "0.19", default-features = false, features = [
     "bevy_window",
     "bevy_winit",
     "bevy_ui",
     "bevy_picking",
     "x11",
 ] }
-mevy = { path = "../../", features = ["0.18", "ui", "experimental"] }
+mevy = { path = "../../", features = ["0.19", "ui", "experimental"] }
 shared = { path = "../shared" }

@@ -1,6 +1,6 @@
 [package]
 name = "mevy_ui"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 
 authors = ["Dekirisu <dekirisu@gmail.com>"]
@@ -26,3 +26,4 @@ default = []
 "0.16" = ["mevy_ui_syntax/0.16"]
 "0.17" = ["mevy_ui_syntax/0.17"]
 "0.18" = ["mevy_ui_syntax/0.18"]
+"0.19" = ["mevy_ui_syntax/0.19"]

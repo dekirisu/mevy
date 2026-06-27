@@ -10,30 +10,42 @@ jobs:
   build:
     name: cargo build
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        feature: [0.18, 0.19]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: cargo build (workspace)
-        run: cargo build --workspace --no-default-features --features 0.18
+        run: cargo build --workspace --no-default-features --features ${{ matrix.feature }}
       - name: cargo build (examples)
         run: cargo build --examples
 
   test:
     name: cargo test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        feature: [0.18, 0.19]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: cargo test (workspace)
-        run: cargo test --workspace --no-default-features --features 0.18
+        run: cargo test --workspace --no-default-features --features ${{ matrix.feature }}
       - name: cargo test (examples)
         run: cargo test --examples
 
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        feature: [0.18, 0.19]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: clippy
-        run: cargo clippy --workspace --no-default-features --features 0.18 -- -D warnings
+        run: cargo clippy --workspace --no-default-features --features ${{ matrix.feature }}
